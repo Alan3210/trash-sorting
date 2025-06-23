@@ -880,19 +880,19 @@ class SortingGame {
             this.recyclingStats.totalItemsSorted++;
             this.recyclingStats.itemsByType[trashItem.data.type]++;
             
-            // Формируем сообщение с комбо и временем разложения
+            // Формируем сообщение
             let message = `+${points} очков!`;
             if (this.comboCount > 1) {
                 message += ` Комбо ×${this.comboMultiplier}!`;
-            }
-            
-            // Добавляем информацию о времени разложения
-            const decomp = this.decompositionTime[trashItem.data.type];
-            if (decomp) {
-                if (decomp.unit === "месяцев") {
-                    message += `\n🌱 Время разложения: ${decomp.min}-${decomp.max} ${decomp.unit}`;
-                } else {
-                    message += `\n⏰ Время разложения: ${decomp.min === decomp.max ? decomp.min : decomp.min + '-' + decomp.max} ${decomp.unit}`;
+            } else {
+                // Добавляем информацию о времени разложения только для первого правильного ответа (без комбо)
+                const decomp = this.decompositionTime[trashItem.data.type];
+                if (decomp) {
+                    if (decomp.unit === "месяцев") {
+                        message += `\n🌱 Время разложения: ${decomp.min}-${decomp.max} ${decomp.unit}`;
+                    } else {
+                        message += `\n⏰ Время разложения: ${decomp.min === decomp.max ? decomp.min : decomp.min + '-' + decomp.max} ${decomp.unit}`;
+                    }
                 }
             }
             
