@@ -64,6 +64,57 @@ class SortingGame {
         this.audioContext = null;
         this.initAudio();
         
+        // Образовательные факты
+        this.ecoFacts = [
+            {
+                title: "Пластик и океаны",
+                text: "Каждую минуту в океаны попадает целый грузовик пластикового мусора. Переработка 1 тонны пластика экономит 2000 литров нефти!"
+            },
+            {
+                title: "Бумага спасает деревья",
+                text: "Переработка 1 тонны бумаги спасает 17 деревьев, экономит 26 000 литров воды и 4000 кВт·ч электроэнергии!"
+            },
+            {
+                title: "Органические отходы",
+                text: "Органика составляет 30% всех отходов. При правильной переработке из неё получается отличный компост для растений!"
+            },
+            {
+                title: "Стекло - вечный материал",
+                text: "Стекло можно перерабатывать бесконечно без потери качества. Из 1 переработанной бутылки экономится энергия для работы лампочки 4 часа!"
+            },
+            {
+                title: "Батарейки и экология",
+                text: "Одна выброшенная батарейка загрязняет 20 кв.м почвы. При переработке из батареек извлекают ценные металлы!"
+            },
+            {
+                title: "Электроника содержит золото",
+                text: "В 1 тонне старых мобильных телефонов золота больше, чем в 1 тонне золотой руды! Переработка электроники очень выгодна!"
+            }
+        ];
+        
+        // Время разложения материалов (в годах)
+        this.decompositionTime = {
+            plastic: { min: 450, max: 1000, unit: "лет" },
+            paper: { min: 2, max: 5, unit: "месяцев" },
+            organic: { min: 1, max: 6, unit: "месяцев" },
+            glass: { min: 1000000, max: 1000000, unit: "лет" },
+            battery: { min: 100, max: 1000, unit: "лет" },
+            electronics: { min: 10, max: 100, unit: "лет" }
+        };
+        
+        // Статистика для финального экрана
+        this.recyclingStats = {
+            totalItemsSorted: 0,
+            itemsByType: {
+                plastic: 0,
+                paper: 0,
+                organic: 0,
+                glass: 0,
+                battery: 0,
+                electronics: 0
+            }
+        };
+        
         // Touch events для мобильных устройств
         this.touchStartPos = { x: 0, y: 0 };
         this.originalTrashPosition = { x: 0, y: 0 };
@@ -825,10 +876,24 @@ class SortingGame {
             this.score += points;
             this.correctAnswers++;
             
-            // Формируем сообщение с комбо
+            // Обновляем статистику переработки
+            this.recyclingStats.totalItemsSorted++;
+            this.recyclingStats.itemsByType[trashItem.data.type]++;
+            
+            // Формируем сообщение с комбо и временем разложения
             let message = `+${points} очков!`;
             if (this.comboCount > 1) {
                 message += ` Комбо ×${this.comboMultiplier}!`;
+            }
+            
+            // Добавляем информацию о времени разложения
+            const decomp = this.decompositionTime[trashItem.data.type];
+            if (decomp) {
+                if (decomp.unit === "месяцев") {
+                    message += `\n🌱 Время разложения: ${decomp.min}-${decomp.max} ${decomp.unit}`;
+                } else {
+                    message += `\n⏰ Время разложения: ${decomp.min === decomp.max ? decomp.min : decomp.min + '-' + decomp.max} ${decomp.unit}`;
+                }
             }
             
             this.showFeedback(message, 'success');
@@ -1136,11 +1201,20 @@ class SortingGame {
     showLevelUpAnimation() {
         const levelUpMessage = document.createElement('div');
         levelUpMessage.className = 'level-up-message';
+        
+        // Выбираем случайный факт
+        const randomFact = this.ecoFacts[Math.floor(Math.random() * this.ecoFacts.length)];
+        
         levelUpMessage.innerHTML = `
             <div class="level-up-content">
                 <h2>🎉 УРОВЕНЬ ${this.currentLevel}! 🎉</h2>
                 <p>Разблокированы новые типы мусора!</p>
                 <p>Требуется: ${this.levelThresholds[this.currentLevel + 1] || 'Максимум'} очков для следующего уровня</p>
+                
+                <div class="eco-fact">
+                    <h3>🌱 ${randomFact.title}</h3>
+                    <p>${randomFact.text}</p>
+                </div>
             </div>
         `;
         
@@ -1150,7 +1224,7 @@ class SortingGame {
             if (levelUpMessage.parentNode) {
                 levelUpMessage.parentNode.removeChild(levelUpMessage);
             }
-        }, 4000);
+        }, 6000); // Увеличили время показа для чтения факта
     }
 
     // Обновление отображения уровня
@@ -1424,6 +1498,9 @@ class SortingGame {
          const overlay = document.createElement('div');
          overlay.className = 'leaderboard-overlay';
          
+         // Рассчитываем экологический эффект
+         const ecoImpact = this.calculateEcoImpact();
+         
          overlay.innerHTML = `
              <div class="name-input-dialog">
                  <div class="dialog-content">
@@ -1434,6 +1511,16 @@ class SortingGame {
                          <p><strong>Правильных ответов:</strong> ${gameStats.correctAnswers}</p>
                          <p><strong>Уровень:</strong> ${gameStats.currentLevel}</p>
                          <p><strong>Время игры:</strong> ${Math.floor(gameStats.playTime / 60)}:${String(gameStats.playTime % 60).padStart(2, '0')}</p>
+                     </div>
+                     
+                     <div class="recycling-stats">
+                         <h3>🌍 Ваш вклад в экологию:</h3>
+                         <p><strong>Всего отсортировано:</strong> ${this.recyclingStats.totalItemsSorted} предметов</p>
+                         ${this.generateRecyclingBreakdown()}
+                         <div class="eco-impact">
+                             <h4>💚 Экологический эффект:</h4>
+                             ${ecoImpact}
+                         </div>
                      </div>
                      <div class="name-input-section">
                          <label for="player-name">Введите ваше имя:</label>
@@ -1628,6 +1715,12 @@ class SortingGame {
          this.perfectStreakStart = Date.now();
          this.lastErrorTime = 0;
          
+         // Сбрасываем статистику переработки
+         this.recyclingStats.totalItemsSorted = 0;
+         Object.keys(this.recyclingStats.itemsByType).forEach(type => {
+             this.recyclingStats.itemsByType[type] = 0;
+         });
+         
          // Очищаем все объекты мусора
          this.activeTrashItems.forEach(item => {
              if (item.element && item.element.parentNode) {
@@ -1668,6 +1761,74 @@ class SortingGame {
      // Показать лидерборд (кнопка в интерфейсе)
      showLeaderboardButton() {
          this.showLeaderboard();
+     }
+
+     // Генерация разбивки переработки по типам
+     generateRecyclingBreakdown() {
+         let breakdown = '';
+         const typeNames = {
+             plastic: '♻️ Пластик',
+             paper: '📄 Бумага', 
+             organic: '🌱 Органика',
+             glass: '🍾 Стекло',
+             battery: '🔋 Батарейки',
+             electronics: '📱 Электроника'
+         };
+         
+         for (const [type, count] of Object.entries(this.recyclingStats.itemsByType)) {
+             if (count > 0) {
+                 breakdown += `<p>${typeNames[type]}: ${count} шт.</p>`;
+             }
+         }
+         
+         return breakdown || '<p>Нет данных о переработке</p>';
+     }
+     
+     // Расчет экологического воздействия
+     calculateEcoImpact() {
+         const impacts = {
+             plastic: { 
+                 text: 'Сэкономлено нефти', 
+                 perItem: 2, // кг нефти на 1 кг пластика
+                 unit: 'кг'
+             },
+             paper: { 
+                 text: 'Спасено деревьев', 
+                 perItem: 0.017, // деревьев на кг бумаги
+                 unit: 'шт'
+             },
+             organic: { 
+                 text: 'Получено компоста', 
+                 perItem: 0.3, // кг компоста из кг органики
+                 unit: 'кг'
+             },
+             glass: { 
+                 text: 'Сэкономлено энергии', 
+                 perItem: 0.5, // кВт·ч на кг стекла
+                 unit: 'кВт·ч'
+             },
+             battery: { 
+                 text: 'Предотвращено загрязнения', 
+                 perItem: 20, // кв.м почвы
+                 unit: 'кв.м почвы'
+             },
+             electronics: { 
+                 text: 'Извлечено ценных металлов', 
+                 perItem: 0.1, // грамм золота/серебра
+                 unit: 'г'
+             }
+         };
+         
+         let result = '';
+         for (const [type, count] of Object.entries(this.recyclingStats.itemsByType)) {
+             if (count > 0 && impacts[type]) {
+                 const impact = impacts[type];
+                 const value = (count * impact.perItem).toFixed(impact.unit === 'шт' ? 1 : 2);
+                 result += `<p>• ${impact.text}: ${value} ${impact.unit}</p>`;
+             }
+         }
+         
+         return result || '<p>Начните сортировать мусор, чтобы увидеть экологический эффект!</p>';
      }
 
      // Завершение игры вручную

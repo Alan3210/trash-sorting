@@ -1356,4 +1356,94 @@ h1 {
         flex-direction: column;
         gap: 10px;
     }
+}
+
+/* Стили для образовательных элементов */
+.eco-fact {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 15px;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+    animation: factSlideIn 0.5s ease-out;
+}
+
+.eco-fact h3 {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.eco-fact p {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    opacity: 0.95;
+}
+
+@keyframes factSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Стили для статистики переработки */
+.recycling-stats {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 20px;
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+}
+
+.recycling-stats h3 {
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.recycling-stats p {
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.eco-impact {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    border-left: 4px solid #2ecc71;
+}
+
+.eco-impact h4 {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.eco-impact p {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+    opacity: 0.95;
+}
+
+/* Улучшенные сообщения обратной связи для поддержки многострочного текста */
+.feedback {
+    white-space: pre-line;
+    max-width: 350px;
+    text-align: center;
+    line-height: 1.3;
 } 
