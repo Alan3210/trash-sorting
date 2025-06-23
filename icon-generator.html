@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор иконки</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .icon {
+            width: 512px;
+            height: 512px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .icon::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: shimmer 3s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%); }
+            100% { transform: translateX(100%) translateY(100%); }
+        }
+        
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            z-index: 2;
+        }
+        
+        .containers {
+            display: flex;
+            gap: 15px;
+            z-index: 2;
+            margin-bottom: 20px;
+        }
+        
+        .mini-container {
+            width: 60px;
+            height: 80px;
+            border-radius: 8px 8px 20px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .blue { background: #3498db; }
+        .yellow { background: #f1c40f; }
+        .green { background: #27ae60; }
+        
+        .trash-items {
+            display: flex;
+            gap: 10px;
+            z-index: 2;
+        }
+        
+        .trash-item {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.2);
+            font-size: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .instructions {
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        .download-btn {
+            background: #27ae60;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .sizes {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .size-variant {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Генератор иконки для itch.io</h1>
+    
+    <div class="icon" id="mainIcon">
+        <div class="title">🗂️</div>
+        <div class="containers">
+            <div class="mini-container blue">🧴</div>
+            <div class="mini-container yellow">📄</div>
+            <div class="mini-container green">🍌</div>
+        </div>
+        <div class="trash-items">
+            <div class="trash-item">🥤</div>
+            <div class="trash-item">📰</div>
+            <div class="trash-item">🍎</div>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h3>Как создать иконку для itch.io:</h3>
+        <ol>
+            <li>Сделайте скриншот квадрата выше</li>
+            <li>Обрежьте изображение до 512x512 пикселей</li>
+            <li>Сохраните как PNG</li>
+            <li>Используйте при загрузке на itch.io</li>
+        </ol>
+        <p><strong>Альтернатива:</strong> Используйте инструменты скриншота или Canva для создания иконки 512x512</p>
+    </div>
+    
+    <div class="sizes">
+        <div class="size-variant">
+            <h4>Основная иконка</h4>
+            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 40px;">🗂️</div>
+            <p>512x512 px</p>
+        </div>
+        
+        <div class="size-variant">
+            <h4>Мини-иконка</h4>
+            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🗂️</div>
+            <p>128x128 px</p>
+        </div>
+    </div>
+</body>
+</html> 

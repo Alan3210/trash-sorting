@@ -444,7 +444,8 @@ class SortingGame {
                 if (this.isDragging) {
                     const droppedType = e.dataTransfer.getData('text/plain');
                     const droppedId = e.dataTransfer.getData('text/id');
-                    this.checkAnswer(droppedType, droppedId);
+                    // Передаем тип контейнера, а не тип мусора
+                    this.checkAnswer(container.dataset.type, droppedId);
                 }
             });
         });
@@ -775,7 +776,8 @@ class SortingGame {
                 const dropTarget = this.getContainerUnderTouch(touch.clientX, touch.clientY);
                 
                 if (dropTarget) {
-                    this.checkAnswer(element.dataset.type, element.dataset.id);
+                    // Передаем тип контейнера, а не тип мусора
+                    this.checkAnswer(dropTarget.dataset.type, element.dataset.id);
                 } else {
                     this.resetTrashItemPosition(element);
                 }
@@ -800,12 +802,13 @@ class SortingGame {
         element.style.top = position.y + 'px';
     }
 
-    checkAnswer(selectedType, itemId) {
+    checkAnswer(containerType, itemId) {
         // Находим объект по ID
         const trashItem = this.activeTrashItems.find(item => item.id === itemId);
         if (!trashItem) return;
         
-        const isCorrect = selectedType === trashItem.data.type;
+        // Проверяем, соответствует ли тип мусора типу контейнера
+        const isCorrect = containerType === trashItem.data.type;
         
         if (isCorrect) {
             const basePoints = 10;
@@ -874,7 +877,7 @@ class SortingGame {
         this.checkLevelUp();
         this.updateLevelDisplay();
         
-        console.log('Ответ:', selectedType, 'Правильно:', isCorrect, 'Комбо:', this.comboCount, 'Счет:', this.score, 'Уровень:', this.currentLevel, 'Объектов на экране:', this.activeTrashItems.length);
+        console.log('Контейнер:', containerType, 'Мусор:', trashItem.data.type, 'Правильно:', isCorrect, 'Комбо:', this.comboCount, 'Счет:', this.score, 'Уровень:', this.currentLevel, 'Объектов на экране:', this.activeTrashItems.length);
     }
 
     // Анимации для конкретных объектов
@@ -1125,7 +1128,8 @@ class SortingGame {
             const droppedType = e.dataTransfer.getData('text/plain');
             const itemId = e.dataTransfer.getData('text/id');
             
-            this.checkAnswer(droppedType, itemId);
+            // Передаем тип контейнера, а не тип мусора
+            this.checkAnswer(container.dataset.type, itemId);
         });
     }
 
