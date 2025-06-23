@@ -1224,7 +1224,7 @@ class SortingGame {
             if (levelUpMessage.parentNode) {
                 levelUpMessage.parentNode.removeChild(levelUpMessage);
             }
-        }, 6000); // Увеличили время показа для чтения факта
+        }, 9000); // Увеличено время показа до 9 секунд для комфортного чтения факта
     }
 
     // Обновление отображения уровня
