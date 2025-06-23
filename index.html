@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра сортировки мусора</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Сортировка мусора</h1>
+            <div class="score-board">
+                <div class="game-stats-row">
+                    <div class="stat-item">
+                        <span>Очки: </span>
+                        <span id="score">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Комбо: </span>
+                        <span id="combo">0</span>
+                        <span class="multiplier">×<span id="multiplier">1</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Мусор: </span>
+                        <span id="trash-count">0</span>
+                        <span>/15</span>
+                    </div>
+                </div>
+                <div class="game-controls">
+                    <button id="leaderboard-btn" class="control-btn">🏆 Рейтинг</button>
+                    <button id="game-over-btn" class="control-btn">🏁 Завершить игру</button>
+                </div>
+            </div>
+        </header>
+
+        <div id="game-area">
+            <div id="trash-spawn-area">
+                <div id="trash-item" class="trash-item hidden">
+                    <!-- Объект мусора появится здесь -->
+                </div>
+            </div>
+        </div>
+
+        <div class="containers">
+            <button id="blue-container" class="container-btn blue" data-type="plastic">
+                <div class="lid-handle"></div>
+                <div class="container-icon">🧴</div>
+                <span>Пластик</span>
+            </button>
+            <button id="yellow-container" class="container-btn yellow" data-type="paper">
+                <div class="lid-handle"></div>
+                <div class="container-icon">📄</div>
+                <span>Бумага</span>
+            </button>
+            <button id="green-container" class="container-btn green" data-type="organic">
+                <div class="lid-handle"></div>
+                <div class="container-icon">🍕</div>
+                <span>Органика</span>
+            </button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
