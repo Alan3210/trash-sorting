@@ -1237,10 +1237,18 @@ class SortingGame {
             document.querySelector('.score-board').appendChild(levelDisplay);
         }
         
+        const currentThreshold = this.levelThresholds[this.currentLevel] || 0;
         const nextThreshold = this.levelThresholds[this.currentLevel + 1];
-        const progress = nextThreshold ? 
-            Math.min(100, ((this.score - this.levelThresholds[this.currentLevel]) / 
-            (nextThreshold - this.levelThresholds[this.currentLevel])) * 100) : 100;
+        
+        let progress = 0;
+        if (nextThreshold) {
+            // Рассчитываем прогресс от текущего порога к следующему
+            const currentLevelProgress = this.score - currentThreshold;
+            const levelRange = nextThreshold - currentThreshold;
+            progress = Math.max(0, Math.min(100, (currentLevelProgress / levelRange) * 100));
+        } else {
+            progress = 100; // Максимальный уровень
+        }
         
         levelDisplay.innerHTML = `
             <div class="level-info">
@@ -1249,8 +1257,16 @@ class SortingGame {
                     <div class="progress-bar" style="width: ${progress}%"></div>
                 </div>
                 <span class="next-level">${nextThreshold ? `До ${nextThreshold}` : 'МАКС'}</span>
-                         </div>
-         `;
+            </div>
+        `;
+        
+        console.log('Обновление уровня:', {
+            score: this.score,
+            currentLevel: this.currentLevel,
+            currentThreshold,
+            nextThreshold,
+            progress: progress.toFixed(1) + '%'
+        });
      }
 
 
