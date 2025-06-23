@@ -395,17 +395,25 @@ class SortingGame {
         const leaderboardBtn = document.getElementById('leaderboard-btn');
         const gameOverBtn = document.getElementById('game-over-btn');
 
+        console.log('Поиск кнопок:', {
+            leaderboardBtn: !!leaderboardBtn,
+            gameOverBtn: !!gameOverBtn
+        });
         
         if (leaderboardBtn) {
             leaderboardBtn.addEventListener('click', () => {
+                console.log('Нажата кнопка лидерборда');
                 this.showLeaderboard();
             });
         }
         
         if (gameOverBtn) {
             gameOverBtn.addEventListener('click', () => {
+                console.log('Нажата кнопка завершения игры');
                 this.endGame();
             });
+        } else {
+            console.error('Кнопка завершения игры не найдена!');
         }
         
 
@@ -1410,11 +1418,17 @@ class SortingGame {
 
      // Проверка на новый рекорд в конце игры
      checkForNewRecord() {
+         console.log('checkForNewRecord() вызван');
          const gameStats = this.getGameStats();
+         console.log('Статистика игры:', gameStats);
          const minScoreForLeaderboard = 50; // Минимальный счет для попадания в лидерборд
          
          if (gameStats.score >= minScoreForLeaderboard) {
+             console.log('Показываем диалог ввода имени');
              this.showNameInputDialog(gameStats);
+         } else {
+             console.log('Очков недостаточно для лидерборда, показываем пустой лидерборд');
+             this.showLeaderboard();
          }
      }
 
@@ -1610,7 +1624,8 @@ class SortingGame {
      restartGame() {
          // Останавливаем все таймеры
          if (this.spawnTimer) {
-             clearInterval(this.spawnTimer);
+             clearTimeout(this.spawnTimer);
+             this.spawnTimer = null;
          }
          
          // Сбрасываем все значения
@@ -1622,13 +1637,17 @@ class SortingGame {
          this.currentLevel = 1;
          this.unlockedTypes = ['plastic', 'paper', 'organic'];
          this.currentSpawnInterval = this.baseSpawnInterval;
-         this.activeBonuses = [];
          this.gameStartTime = Date.now();
          this.perfectStreakStart = Date.now();
          this.lastErrorTime = 0;
          
-         // Очищаем экран
-         this.clearAllTrash();
+         // Очищаем все объекты мусора
+         this.activeTrashItems.forEach(item => {
+             if (item.element && item.element.parentNode) {
+                 item.element.parentNode.removeChild(item.element);
+             }
+         });
+         this.activeTrashItems = [];
          
          // Сбрасываем заполнение контейнеров
          Object.keys(this.containerFillLevels).forEach(type => {
@@ -1643,12 +1662,14 @@ class SortingGame {
              }
          });
          
+         // Обновляем массив контейнеров
+         this.containers = Array.from(document.querySelectorAll('.container-btn'));
+         
          // Обновляем интерфейс
          this.updateScore();
          this.updateComboDisplay();
          this.updateLevelDisplay();
          this.updateTrashCounter();
-         this.updateBonusDisplay();
          this.initializeContainerFills();
          
          // Перезапускаем игру
@@ -1664,13 +1685,18 @@ class SortingGame {
 
      // Завершение игры вручную
      endGame() {
+         console.log('endGame() вызван');
+         
          // Останавливаем спавн
          if (this.spawnTimer) {
-             clearInterval(this.spawnTimer);
+             clearTimeout(this.spawnTimer);
+             this.spawnTimer = null;
+             console.log('Таймер спавна остановлен');
          }
          
          // Показываем финальные статистики и проверяем рекорд
          setTimeout(() => {
+             console.log('Вызываем checkForNewRecord()');
              this.checkForNewRecord();
          }, 500);
          
