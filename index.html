@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Атмосферные эффекты -->
+    <div id="atmospheric-effects">
+        <div id="falling-leaves"></div>
+        <div id="dust-particles"></div>
+        <div id="recycling-rain"></div>
+    </div>
+    
     <div class="container">
         <header>
             <h1>Сортировка мусора</h1>
@@ -21,10 +28,11 @@
                         <span id="combo">0</span>
                         <span class="multiplier">×<span id="multiplier">1</span></span>
                     </div>
+
                     <div class="stat-item">
-                        <span>Мусор: </span>
-                        <span id="trash-count">0</span>
-                        <span>/15</span>
+                        <span>Серия: </span>
+                        <span id="streak">0</span>
+                        <span>🔥</span>
                     </div>
                 </div>
                 <div class="game-controls">
@@ -52,11 +60,6 @@
                 <div class="lid-handle"></div>
                 <div class="container-icon">📄</div>
                 <span>Бумага</span>
-            </button>
-            <button id="green-container" class="container-btn green" data-type="organic">
-                <div class="lid-handle"></div>
-                <div class="container-icon">🍕</div>
-                <span>Органика</span>
             </button>
         </div>
     </div>

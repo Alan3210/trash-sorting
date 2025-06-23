@@ -28,8 +28,8 @@ class SortingGame {
         // Система уровней
         this.currentLevel = 1;
         this.maxLevel = 4;
-        this.levelThresholds = [0, 50, 150, 300, 500]; // Очки для перехода на след. уровень
-        this.unlockedTypes = ['plastic', 'paper', 'organic']; // Разблокированные типы мусора
+        this.levelThresholds = [0, 100, 250, 450, 750]; // Очки для перехода на след. уровень (макс. уровень 4)
+        this.unlockedTypes = ['plastic', 'paper']; // Начинаем только с 2 контейнеров
         
 
         
@@ -37,14 +37,16 @@ class SortingGame {
         this.playerName = '';
         this.leaderboard = this.loadLeaderboard();
         
+        // Сохраняем лидерборд после миграции
+        this.saveLeaderboard();
+        
         // Анимация заполнения контейнеров
         this.containerFillLevels = {
             plastic: 0,
             paper: 0,
             organic: 0,
             glass: 0,
-            battery: 0,
-            electronics: 0
+            battery: 0
         };
         this.maxFillLevel = 100; // Максимальный уровень заполнения
         this.fillIncrement = 5;  // На сколько заполняется при каждом правильном ответе
@@ -60,11 +62,41 @@ class SortingGame {
         this.maxCombo = 0;
         this.comboMultiplier = 1;
         
+        // Система достижений
+        this.correctAnswersStreak = 0; // Серия правильных ответов подряд
+        this.unlockedAchievements = [];
+        this.achievements = [
+            {
+                id: 'nature_friend',
+                name: 'Друг природы',
+                description: '10 правильных ответов подряд',
+                icon: '🏅',
+                requirement: 10,
+                unlocked: false
+            },
+            {
+                id: 'master_sorter',
+                name: 'Мастер сортировки',
+                description: '25 правильных ответов подряд',
+                icon: '🛡️',
+                requirement: 25,
+                unlocked: false
+            },
+            {
+                id: 'eco_warrior',
+                name: 'Эко-воин',
+                description: '40 правильных ответов подряд',
+                icon: '🌟',
+                requirement: 40,
+                unlocked: false
+            }
+        ];
+        
         // Web Audio API для звуков
         this.audioContext = null;
         this.initAudio();
         
-        // Образовательные факты
+        // Образовательные факты для повышения уровня
         this.ecoFacts = [
             {
                 title: "Пластик и океаны",
@@ -83,12 +115,87 @@ class SortingGame {
                 text: "Стекло можно перерабатывать бесконечно без потери качества. Из 1 переработанной бутылки экономится энергия для работы лампочки 4 часа!"
             },
             {
-                title: "Батарейки и экология",
-                text: "Одна выброшенная батарейка загрязняет 20 кв.м почвы. При переработке из батареек извлекают ценные металлы!"
+                title: "Опасные отходы",
+                text: "Батарейки, лекарства и химикаты требуют специальной утилизации. Одна батарейка загрязняет 20 кв.м почвы на десятки лет!"
+            }
+        ];
+
+        // Факты дня для стартового экрана
+        this.dailyFacts = [
+            {
+                title: "Великое тихоокеанское мусорное пятно",
+                text: "В Тихом океане плавает остров из пластика размером с 3 Франции! Он состоит из 80 000 тонн мусора и продолжает расти.",
+                icon: "🌊"
             },
             {
-                title: "Электроника содержит золото",
-                text: "В 1 тонне старых мобильных телефонов золота больше, чем в 1 тонне золотой руды! Переработка электроники очень выгодна!"
+                title: "Микропластик в нашей еде",
+                text: "Средний человек съедает 5 граммов пластика в неделю - это как кредитная карточка! Микропластик найден даже в питьевой воде.",
+                icon: "🍽️"
+            },
+            {
+                title: "Вторая жизнь пластиковых бутылок",
+                text: "Из 25 пластиковых бутылок можно сделать одну флисовую куртку, а из 35 бутылок - детское автокресло!",
+                icon: "♻️"
+            },
+            {
+                title: "Бумага против планшетов",
+                text: "Производство одного планшета загрязняет окружающую среду как 24 кг бумаги. Но планшет может заменить тысячи листов!",
+                icon: "📱"
+            },
+            {
+                title: "Компост - золото для почвы",
+                text: "1 тонна пищевых отходов может превратиться в 200 кг питательного компоста, который заменяет химические удобрения.",
+                icon: "🌱"
+            },
+            {
+                title: "Стеклянная магия",
+                text: "Переработка стекла экономит 25-32% энергии по сравнению с производством нового. Стекло можно перерабатывать вечно!",
+                icon: "🍾"
+            },
+            {
+                title: "Опасные отходы",
+                text: "Батарейки, просроченные лекарства и химикаты нельзя выбрасывать в обычный мусор - они загрязняют окружающую среду!",
+                icon: "⚠️"
+            },
+            {
+                title: "Правило 3R",
+                text: "Reduce (сокращай), Reuse (используй повторно), Recycle (перерабатывай) - три принципа экологичной жизни.",
+                icon: "🔄"
+            },
+            {
+                title: "Быстрая мода и планета",
+                text: "Индустрия моды производит 20% всех промышленных сточных вод. Покупай качественную одежду, которая прослужит дольше!",
+                icon: "👕"
+            },
+            {
+                title: "Цифровое загрязнение",
+                text: "Отправка 65 электронных писем = 1 км поездки на автомобиле по углеродному следу. Удаляй ненужные файлы и письма!",
+                icon: "📧"
+            },
+            {
+                title: "Леса - легкие планеты",
+                text: "Каждую секунду вырубается участок леса размером с футбольное поле. Переработка бумаги помогает сохранить деревья!",
+                icon: "🌳"
+            },
+            {
+                title: "Энергия из мусора",
+                text: "В Швеции перерабатывают 99% бытовых отходов - часть сжигают для производства энергии, часть превращают в новые товары.",
+                icon: "⚡"
+            },
+            {
+                title: "Пластиковые острова",
+                text: "В мировом океане дрейфует 5 гигантских мусорных пятен. Самое большое в 2 раза превышает размер Техаса!",
+                icon: "🏝️"
+            },
+            {
+                title: "Алюминиевые банки-чемпионы",
+                text: "Алюминиевая банка полностью перерабатывается всего за 60 дней и может стать новой банкой бесконечное число раз!",
+                icon: "🥤"
+            },
+            {
+                title: "Мусорные горы",
+                text: "Каждый человек производит около 4.5 кг мусора в день. За год это целая гора высотой с трехэтажный дом!",
+                icon: "🗑️"
             }
         ];
         
@@ -98,8 +205,7 @@ class SortingGame {
             paper: { min: 2, max: 5, unit: "месяцев" },
             organic: { min: 1, max: 6, unit: "месяцев" },
             glass: { min: 1000000, max: 1000000, unit: "лет" },
-            battery: { min: 100, max: 1000, unit: "лет" },
-            electronics: { min: 10, max: 100, unit: "лет" }
+            battery: { min: 100, max: 1000, unit: "лет" }
         };
         
         // Статистика для финального экрана
@@ -110,8 +216,7 @@ class SortingGame {
                 paper: 0,
                 organic: 0,
                 glass: 0,
-                battery: 0,
-                electronics: 0
+                battery: 0
             }
         };
         
@@ -155,15 +260,8 @@ class SortingGame {
             { emoji: '🪫', type: 'battery', name: 'Разряженная батарейка' },
             { emoji: '🔌', type: 'battery', name: 'Зарядное устройство' },
             { emoji: '💊', type: 'battery', name: 'Просроченные лекарства' },
-            { emoji: '🧪', type: 'battery', name: 'Химикаты' },
-            
-            // Уровень 4 - Электроника
-            { emoji: '📱', type: 'electronics', name: 'Смартфон' },
-            { emoji: '💻', type: 'electronics', name: 'Ноутбук' },
-            { emoji: '⌨️', type: 'electronics', name: 'Клавиатура' },
-            { emoji: '🖱️', type: 'electronics', name: 'Мышь' },
-            { emoji: '📺', type: 'electronics', name: 'Телевизор' },
-            { emoji: '🎮', type: 'electronics', name: 'Игровая приставка' },
+            { emoji: '⚗️', type: 'battery', name: 'Химикаты' },
+            { emoji: '🧴', type: 'battery', name: 'Опасная жидкость' }
             
 
         ];
@@ -268,40 +366,124 @@ class SortingGame {
 
     // Создание частиц успеха (искры)
     createSuccessParticles(x, y) {
-        const colors = ['#2ecc71', '#27ae60', '#f1c40f', '#f39c12'];
-        const particleCount = 8;
+        // Создаем несколько типов частиц для разнообразия
+        this.createSparkParticles(x, y);
+        this.createStarParticles(x, y);
+        this.createGlowParticles(x, y);
+    }
+
+    // Искры - основные яркие частицы
+    createSparkParticles(x, y) {
+        const colors = ['#2ecc71', '#27ae60', '#f1c40f', '#f39c12', '#fff'];
+        const particleCount = 12;
         
         for (let i = 0; i < particleCount; i++) {
             const particle = document.createElement('div');
-            particle.className = 'particle success-particle';
+            particle.className = 'particle spark-particle';
             particle.style.position = 'fixed';
             particle.style.left = x + 'px';
             particle.style.top = y + 'px';
-            particle.style.width = '6px';
-            particle.style.height = '6px';
-            particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Случайный размер
+            const size = 4 + Math.random() * 6;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            particle.style.backgroundColor = color;
+            particle.style.boxShadow = `0 0 ${size * 2}px ${color}`;
             particle.style.borderRadius = '50%';
             particle.style.pointerEvents = 'none';
             particle.style.zIndex = '9999';
             
-            // Случайное направление
-            const angle = (Math.PI * 2 * i) / particleCount;
-            const velocity = 50 + Math.random() * 30;
+            // Радиальный разлет
+            const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.3;
+            const velocity = 40 + Math.random() * 50;
             const vx = Math.cos(angle) * velocity;
             const vy = Math.sin(angle) * velocity;
             
             particle.style.setProperty('--vx', vx + 'px');
             particle.style.setProperty('--vy', vy + 'px');
+            particle.style.setProperty('--rotation', Math.random() * 360 + 'deg');
             
             document.body.appendChild(particle);
             
             // Анимация и удаление
-            particle.style.animation = 'particleSuccess 0.8s ease-out forwards';
+            particle.style.animation = 'sparkParticle 1s ease-out forwards';
             setTimeout(() => {
                 if (particle.parentNode) {
                     particle.parentNode.removeChild(particle);
                 }
-            }, 800);
+            }, 1000);
+        }
+    }
+
+    // Звездочки - декоративные элементы
+    createStarParticles(x, y) {
+        const starSymbols = ['✨', '⭐', '🌟', '💫'];
+        const particleCount = 4;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle star-particle';
+            particle.style.position = 'fixed';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            particle.style.fontSize = (12 + Math.random() * 8) + 'px';
+            particle.innerHTML = starSymbols[Math.floor(Math.random() * starSymbols.length)];
+            particle.style.pointerEvents = 'none';
+            particle.style.zIndex = '9998';
+            particle.style.color = '#fff';
+            particle.style.textShadow = '0 0 10px #f1c40f';
+            
+            // Медленный подъем с покачиванием
+            const offsetX = (Math.random() - 0.5) * 60;
+            const offsetY = -30 - Math.random() * 40;
+            
+            particle.style.setProperty('--vx', offsetX + 'px');
+            particle.style.setProperty('--vy', offsetY + 'px');
+            particle.style.setProperty('--rotation', Math.random() * 360 + 'deg');
+            
+            document.body.appendChild(particle);
+            
+            // Анимация и удаление
+            particle.style.animation = 'starParticle 1.5s ease-out forwards';
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, 1500);
+        }
+    }
+
+    // Сияющие кольца
+    createGlowParticles(x, y) {
+        const colors = ['rgba(46, 204, 113, 0.6)', 'rgba(241, 196, 15, 0.6)', 'rgba(255, 255, 255, 0.4)'];
+        const ringCount = 3;
+        
+        for (let i = 0; i < ringCount; i++) {
+            const ring = document.createElement('div');
+            ring.className = 'particle glow-particle';
+            ring.style.position = 'fixed';
+            ring.style.left = (x - 20) + 'px';
+            ring.style.top = (y - 20) + 'px';
+            ring.style.width = '40px';
+            ring.style.height = '40px';
+            ring.style.border = `2px solid ${colors[i % colors.length]}`;
+            ring.style.borderRadius = '50%';
+            ring.style.pointerEvents = 'none';
+            ring.style.zIndex = '9997';
+            ring.style.animationDelay = (i * 0.2) + 's';
+            
+            document.body.appendChild(ring);
+            
+            // Анимация и удаление
+            ring.style.animation = 'glowRing 1s ease-out forwards';
+            setTimeout(() => {
+                if (ring.parentNode) {
+                    ring.parentNode.removeChild(ring);
+                }
+            }, 1000 + (i * 200));
         }
     }
 
@@ -426,9 +608,15 @@ class SortingGame {
         this.setupEventListeners();
         this.updateLevelDisplay();
         this.initializeContainerFills();
-        this.showInitialTutorial();
-        this.startSpawning();
-        this.startOverflowMonitoring();
+        
+        // Инициализируем цветовую схему для 1-го уровня
+        this.updateColorScheme();
+        
+        // Инициализируем атмосферные эффекты
+        this.initAtmosphericEffects();
+        
+        // Показываем факт дня, затем запускаем игру
+        this.showDailyFact();
     }
 
     setupEventListeners() {
@@ -494,8 +682,8 @@ class SortingGame {
                 if (this.isDragging) {
                     const droppedType = e.dataTransfer.getData('text/plain');
                     const droppedId = e.dataTransfer.getData('text/id');
-                    // Передаем тип контейнера, а не тип мусора
-                    this.checkAnswer(container.dataset.type, droppedId);
+                    // Передаем тип контейнера и координаты drop
+                    this.checkAnswer(container.dataset.type, droppedId, e.clientX, e.clientY);
                 }
             });
         });
@@ -742,31 +930,64 @@ class SortingGame {
 
     // Настройка цвета объекта мусора
     setTrashItemColor(element, type) {
+        // Добавляем класс для грязного мусора
+        element.classList.add('dirty-trash', `dirty-${type}`);
+        
         switch(type) {
             case 'plastic':
-                element.style.backgroundColor = 'rgba(52, 152, 219, 0.2)';
+                element.style.background = `
+                    radial-gradient(circle at 20% 30%, rgba(101, 67, 33, 0.4) 8%, transparent 20%),
+                    radial-gradient(circle at 80% 70%, rgba(139, 69, 19, 0.3) 12%, transparent 25%),
+                    radial-gradient(circle at 45% 15%, rgba(160, 82, 45, 0.2) 6%, transparent 18%),
+                    linear-gradient(135deg, rgba(41, 128, 185, 0.6) 0%, rgba(52, 152, 219, 0.4) 40%, rgba(30, 100, 150, 0.7) 100%)
+                `;
+                element.style.border = '2px solid rgba(30, 100, 150, 0.6)';
                 break;
             case 'paper':
-                element.style.backgroundColor = 'rgba(241, 196, 15, 0.2)';
+                element.style.background = `
+                    radial-gradient(circle at 15% 25%, rgba(101, 67, 33, 0.5) 10%, transparent 22%),
+                    radial-gradient(circle at 75% 80%, rgba(139, 69, 19, 0.4) 8%, transparent 20%),
+                    radial-gradient(circle at 60% 10%, rgba(205, 133, 63, 0.3) 12%, transparent 28%),
+                    linear-gradient(45deg, rgba(218, 165, 32, 0.8) 0%, rgba(184, 134, 11, 0.9) 60%, rgba(160, 120, 20, 0.7) 100%)
+                `;
+                element.style.border = '2px solid rgba(160, 120, 20, 0.8)';
                 break;
             case 'organic':
-                element.style.backgroundColor = 'rgba(39, 174, 96, 0.2)';
+                element.style.background = `
+                    radial-gradient(circle at 25% 35%, rgba(101, 67, 33, 0.6) 12%, transparent 25%),
+                    radial-gradient(circle at 70% 20%, rgba(139, 69, 19, 0.5) 10%, transparent 22%),
+                    radial-gradient(circle at 40% 85%, rgba(85, 107, 47, 0.4) 15%, transparent 30%),
+                    linear-gradient(200deg, rgba(34, 139, 34, 0.5) 0%, rgba(85, 107, 47, 0.7) 50%, rgba(107, 142, 35, 0.6) 100%)
+                `;
+                element.style.border = '2px solid rgba(85, 107, 47, 0.8)';
                 break;
             case 'glass':
-                element.style.backgroundColor = 'rgba(52, 152, 219, 0.3)';
-                element.style.border = '2px solid rgba(52, 152, 219, 0.8)';
+                element.style.background = `
+                    linear-gradient(45deg, rgba(220, 220, 220, 0.1) 0%, transparent 20%),
+                    linear-gradient(135deg, transparent 40%, rgba(200, 200, 200, 0.2) 60%),
+                    radial-gradient(circle at 30% 40%, rgba(169, 169, 169, 0.3) 5%, transparent 15%),
+                    radial-gradient(circle at 80% 30%, rgba(105, 105, 105, 0.2) 8%, transparent 20%),
+                    linear-gradient(200deg, rgba(176, 196, 222, 0.4) 0%, rgba(135, 206, 235, 0.3) 100%)
+                `;
+                element.style.border = '2px solid rgba(135, 206, 235, 0.5)';
                 break;
             case 'battery':
-                element.style.backgroundColor = 'rgba(231, 76, 60, 0.2)';
-                element.style.border = '2px solid rgba(231, 76, 60, 0.8)';
-                break;
-            case 'electronics':
-                element.style.backgroundColor = 'rgba(155, 89, 182, 0.2)';
-                element.style.border = '2px solid rgba(155, 89, 182, 0.8)';
+                element.style.background = `
+                    radial-gradient(circle at 20% 20%, rgba(139, 69, 19, 0.6) 8%, transparent 18%),
+                    radial-gradient(circle at 85% 75%, rgba(160, 82, 45, 0.5) 12%, transparent 25%),
+                    radial-gradient(circle at 50% 90%, rgba(101, 67, 33, 0.4) 10%, transparent 22%),
+                    linear-gradient(135deg, rgba(178, 34, 34, 0.7) 0%, rgba(139, 0, 0, 0.8) 50%, rgba(102, 25, 25, 0.9) 100%)
+                `;
+                element.style.border = '2px solid rgba(139, 0, 0, 0.8)';
                 break;
             case 'metal':
-                element.style.backgroundColor = 'rgba(127, 140, 141, 0.2)';
-                element.style.border = '2px solid rgba(127, 140, 141, 0.8)';
+                element.style.background = `
+                    radial-gradient(circle at 30% 25%, rgba(139, 69, 19, 0.5) 10%, transparent 20%),
+                    radial-gradient(circle at 75% 70%, rgba(160, 82, 45, 0.4) 8%, transparent 18%),
+                    radial-gradient(circle at 15% 80%, rgba(101, 67, 33, 0.3) 12%, transparent 24%),
+                    linear-gradient(45deg, rgba(105, 105, 105, 0.8) 0%, rgba(119, 136, 153, 0.6) 40%, rgba(75, 85, 95, 0.9) 100%)
+                `;
+                element.style.border = '2px solid rgba(75, 85, 95, 0.8)';
                 break;
         }
     }
@@ -781,12 +1002,18 @@ class SortingGame {
             e.dataTransfer.setData('text/plain', element.dataset.type);
             e.dataTransfer.setData('text/id', element.dataset.id);
             e.dataTransfer.effectAllowed = 'move';
+            
+            // Показываем информацию о времени разложения
+            this.showDecompositionInfo(element.dataset.type);
         });
 
         element.addEventListener('dragend', (e) => {
             this.isDragging = false;
             element.style.opacity = '1';
             this.clearContainerHighlights();
+            
+            // Скрываем информацию о времени разложения
+            this.hideDecompositionInfo();
         });
 
         // Mobile touch events (для обычных объектов)
@@ -805,6 +1032,9 @@ class SortingGame {
             element.style.zIndex = '1000';
             element.style.opacity = '0.8';
             element.style.transform = 'scale(1.1)';
+            
+            // Показываем информацию о времени разложения
+            this.showDecompositionInfo(element.dataset.type);
         });
 
         element.addEventListener('touchmove', (e) => {
@@ -826,8 +1056,8 @@ class SortingGame {
                 const dropTarget = this.getContainerUnderTouch(touch.clientX, touch.clientY);
                 
                 if (dropTarget) {
-                    // Передаем тип контейнера, а не тип мусора
-                    this.checkAnswer(dropTarget.dataset.type, element.dataset.id);
+                    // Передаем тип контейнера и координаты касания
+                    this.checkAnswer(dropTarget.dataset.type, element.dataset.id, touch.clientX, touch.clientY);
                 } else {
                     this.resetTrashItemPosition(element);
                 }
@@ -835,6 +1065,9 @@ class SortingGame {
                 this.isDragging = false;
                 this.currentDraggedElement = null;
                 this.clearContainerHighlights();
+                
+                // Скрываем информацию о времени разложения
+                this.hideDecompositionInfo();
             }
         });
     }
@@ -852,7 +1085,7 @@ class SortingGame {
         element.style.top = position.y + 'px';
     }
 
-    checkAnswer(containerType, itemId) {
+    checkAnswer(containerType, itemId, dropX = null, dropY = null) {
         // Находим объект по ID
         const trashItem = this.activeTrashItems.find(item => item.id === itemId);
         if (!trashItem) return;
@@ -861,7 +1094,7 @@ class SortingGame {
         const isCorrect = containerType === trashItem.data.type;
         
         if (isCorrect) {
-            const basePoints = 10;
+            const basePoints = 5;
             
             // Увеличиваем комбо
             this.comboCount++;
@@ -875,6 +1108,10 @@ class SortingGame {
             
             this.score += points;
             this.correctAnswers++;
+            this.correctAnswersStreak++;
+            
+            // Проверяем достижения
+            this.checkAchievements();
             
             // Обновляем статистику переработки
             this.recyclingStats.totalItemsSorted++;
@@ -897,14 +1134,21 @@ class SortingGame {
             }
             
             this.showFeedback(message, 'success');
-            this.animateTrashCorrect(trashItem.element);
+            this.animateTrashCorrect(trashItem.element, dropX, dropY);
             this.playSuccessSound();
             
             // Создаем эффект взрыва при комбо 4+
             if (this.comboCount >= 4 && this.comboCount % 2 === 0) {
-                const rect = trashItem.element.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
+                // Используем координаты drop если есть, иначе центр элемента
+                let centerX, centerY;
+                if (dropX && dropY) {
+                    centerX = dropX;
+                    centerY = dropY;
+                } else {
+                    const rect = trashItem.element.getBoundingClientRect();
+                    centerX = rect.left + rect.width / 2;
+                    centerY = rect.top + rect.height / 2;
+                }
                 this.createComboExplosion(centerX, centerY, this.comboMultiplier);
             }
             
@@ -923,6 +1167,9 @@ class SortingGame {
             this.comboCount = 0;
             this.comboMultiplier = 1;
             this.score = Math.max(0, this.score - 5);
+            
+            // Сбрасываем серию правильных ответов
+            this.correctAnswersStreak = 0;
             
             // Записываем время ошибки для достижения "Эколог со стажем"
             this.lastErrorTime = Date.now();
@@ -945,14 +1192,20 @@ class SortingGame {
     }
 
     // Анимации для конкретных объектов
-    animateTrashCorrect(element) {
+    animateTrashCorrect(element, dropX = null, dropY = null) {
         element.style.animation = 'correctAnswer 0.6s ease-out';
         
-        // Создаем частицы успеха в центре элемента
-        const rect = element.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        this.createSuccessParticles(centerX, centerY);
+        // Создаем частицы успеха в точке касания или центре элемента
+        let particleX, particleY;
+        if (dropX && dropY) {
+            particleX = dropX;
+            particleY = dropY;
+        } else {
+            const rect = element.getBoundingClientRect();
+            particleX = rect.left + rect.width / 2;
+            particleY = rect.top + rect.height / 2;
+        }
+        this.createSuccessParticles(particleX, particleY);
     }
 
     animateTrashIncorrect(element) {
@@ -1018,10 +1271,77 @@ class SortingGame {
         }, 300);
     }
 
+    // Проверка достижений
+    checkAchievements() {
+        this.achievements.forEach(achievement => {
+            if (!achievement.unlocked && this.correctAnswersStreak >= achievement.requirement) {
+                this.unlockAchievement(achievement);
+            }
+        });
+    }
+
+    // Разблокирование достижения
+    unlockAchievement(achievement) {
+        achievement.unlocked = true;
+        this.unlockedAchievements.push(achievement);
+        this.showAchievementNotification(achievement);
+        console.log(`Достижение разблокировано: ${achievement.name}`);
+    }
+
+    // Показ уведомления о достижении
+    showAchievementNotification(achievement) {
+        const notification = document.createElement('div');
+        notification.className = 'achievement-notification';
+        
+        notification.innerHTML = `
+            <div class="achievement-content">
+                <div class="achievement-icon">${achievement.icon}</div>
+                <div class="achievement-text">
+                    <h3>Достижение разблокировано!</h3>
+                    <h4>${achievement.name}</h4>
+                    <p>${achievement.description}</p>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Анимация появления
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        // Автоматическое удаление через 5 секунд
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 500);
+        }, 5000);
+        
+        // Закрытие по клику
+        notification.addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 500);
+        });
+    }
+
     // Обновление отображения комбо и множителя
     updateComboDisplay() {
         document.getElementById('combo').textContent = this.comboCount;
         document.getElementById('multiplier').textContent = this.comboMultiplier;
+        
+        // Обновляем счетчик серии правильных ответов
+        const streakElement = document.getElementById('streak');
+        if (streakElement) {
+            streakElement.textContent = this.correctAnswersStreak;
+        }
         
         const comboDisplay = document.querySelector('.stat-item:nth-child(2)');
         
@@ -1055,13 +1375,37 @@ class SortingGame {
     // Метод для паузы/возобновления игры
     togglePause() {
         if (this.spawnTimer) {
+            this.pauseGame();
+        } else {
+            this.resumeGame();
+        }
+    }
+
+    // Поставить игру на паузу
+    pauseGame() {
+        if (this.spawnTimer) {
             clearTimeout(this.spawnTimer);
             this.spawnTimer = null;
             console.log('Игра на паузе');
-        } else {
+        }
+    }
+
+    // Возобновить игру
+    resumeGame() {
+        if (!this.spawnTimer) {
             this.scheduleNextSpawn();
             console.log('Игра возобновлена');
         }
+    }
+
+    // Принудительно возобновить игру (для случаев когда нужно гарантированно запустить спавн)
+    forceResumeGame() {
+        if (this.spawnTimer) {
+            clearTimeout(this.spawnTimer);
+            this.spawnTimer = null;
+        }
+        this.scheduleNextSpawn();
+        console.log('Игра принудительно возобновлена');
     }
 
     // Получить статистику игры
@@ -1076,7 +1420,9 @@ class SortingGame {
             accuracy: accuracy,
             currentSpeed: this.currentSpawnInterval,
             maxCombo: this.maxCombo,
-            activeItems: this.activeTrashItems.length
+            currentLevel: this.currentLevel,
+            activeItems: this.activeTrashItems.length,
+            unlockedAchievements: this.unlockedAchievements.slice() // копия массива достижений
         };
     }
 
@@ -1084,12 +1430,21 @@ class SortingGame {
 
     // Проверка и обновление уровня
     checkLevelUp() {
-        if (this.currentLevel >= this.maxLevel) return;
+        // Проверяем победу на максимальном уровне
+        if (this.currentLevel >= this.maxLevel) {
+            const victoryThreshold = 750; // 750 очков = победа
+            if (this.score >= victoryThreshold) {
+                console.log('ПОБЕДА! Достигнут порог победы:', victoryThreshold);
+                this.endGame();
+            }
+            return;
+        }
         
-        const nextLevelThreshold = this.levelThresholds[this.currentLevel + 1];
+        const nextLevelThreshold = this.levelThresholds[this.currentLevel];
         if (this.score >= nextLevelThreshold) {
             this.currentLevel++;
             this.unlockNewTrashTypes();
+            this.updateColorScheme(); // Изменяем цветовую схему
             this.showLevelUpAnimation();
             this.updateLevelDisplay();
             console.log(`Переход на уровень ${this.currentLevel}!`);
@@ -1099,9 +1454,9 @@ class SortingGame {
     // Разблокировка новых типов мусора
     unlockNewTrashTypes() {
         const levelTrashTypes = {
-            2: ['glass'],
-            3: ['battery'], 
-            4: ['electronics']
+            2: ['organic'],   // Уровень 2: добавляем органику (3-й контейнер)
+            3: ['glass'],     // Уровень 3: добавляем стекло (4-й контейнер)  
+            4: ['battery']    // Уровень 4: добавляем опасные отходы (5-й контейнер)
         };
         
         const newTypes = levelTrashTypes[this.currentLevel];
@@ -1139,17 +1494,17 @@ class SortingGame {
             // Добавляем обработчики событий
             this.setupContainerEvents(container);
             
-            // Анимация появления контейнера
-            container.style.animation = 'containerAppear 1s ease-out';
+            // Эффект материализации контейнера
+            this.materializeContainer(container, type);
         });
     }
 
     // Вспомогательные методы для контейнеров
     getContainerClass(type) {
         const classes = {
+            organic: 'green',
             glass: 'cyan',
-            battery: 'red', 
-            electronics: 'purple',
+            battery: 'red',
             metal: 'gray'
         };
         return classes[type] || 'gray';
@@ -1157,18 +1512,18 @@ class SortingGame {
 
     getContainerIcon(type) {
         const icons = {
+            organic: '🍕',
             glass: '🥃',
-            battery: '🔋',
-            electronics: '📱'
+            battery: '⚠️'
         };
         return icons[type] || '❓';
     }
 
     getContainerLabel(type) {
         const labels = {
+            organic: 'Органика',
             glass: 'Стекло',
-            battery: 'Батарейки',
-            electronics: 'Электроника'
+            battery: 'Опасные отходы'
         };
         return labels[type] || 'Неизвестно';
     }
@@ -1199,6 +1554,9 @@ class SortingGame {
 
     // Анимация повышения уровня
     showLevelUpAnimation() {
+        // Ставим игру на паузу во время анимации уровня
+        this.pauseGame();
+        
         const levelUpMessage = document.createElement('div');
         levelUpMessage.className = 'level-up-message';
         
@@ -1209,7 +1567,7 @@ class SortingGame {
             <div class="level-up-content">
                 <h2>🎉 УРОВЕНЬ ${this.currentLevel}! 🎉</h2>
                 <p>Разблокированы новые типы мусора!</p>
-                <p>Требуется: ${this.levelThresholds[this.currentLevel + 1] || 'Максимум'} очков для следующего уровня</p>
+                <p>Требуется: ${this.currentLevel >= 4 ? '750 очков для победы' : `${this.levelThresholds[this.currentLevel]} очков для следующего уровня`}</p>
                 
                 <div class="eco-fact">
                     <h3>🌱 ${randomFact.title}</h3>
@@ -1224,7 +1582,16 @@ class SortingGame {
             if (levelUpMessage.parentNode) {
                 levelUpMessage.parentNode.removeChild(levelUpMessage);
             }
-        }, 9000); // Увеличено время показа до 9 секунд для комфортного чтения факта
+            // Принудительно возобновляем игру после закрытия анимации уровня
+            this.forceResumeGame();
+            
+            // Добавляем немедленный спавн мусора для лучшего UX
+            if (this.activeTrashItems.length < this.maxTrashItems) {
+                setTimeout(() => {
+                    this.spawnTrash();
+                }, 500); // Небольшая задержка для плавности
+            }
+        }, 5000); // Время показа 5 секунд как в CSS анимации
     }
 
     // Обновление отображения уровня
@@ -1237,8 +1604,8 @@ class SortingGame {
             document.querySelector('.score-board').appendChild(levelDisplay);
         }
         
-        const currentThreshold = this.levelThresholds[this.currentLevel] || 0;
-        const nextThreshold = this.levelThresholds[this.currentLevel + 1];
+        const currentThreshold = this.levelThresholds[this.currentLevel - 1] || 0;
+        const nextThreshold = this.levelThresholds[this.currentLevel];
         
         let progress = 0;
         if (nextThreshold) {
@@ -1247,7 +1614,12 @@ class SortingGame {
             const levelRange = nextThreshold - currentThreshold;
             progress = Math.max(0, Math.min(100, (currentLevelProgress / levelRange) * 100));
         } else {
-            progress = 100; // Максимальный уровень
+            // Максимальный уровень - показываем прогресс до победы от начала 4-го уровня
+            const currentThresholdFor4 = this.levelThresholds[this.currentLevel - 1]; // 450 (начало 4-го уровня)
+            const victoryThreshold = 750;
+            const progressToVictory = this.score - currentThresholdFor4; // очки сверх 450
+            const victoryRange = victoryThreshold - currentThresholdFor4; // 750 - 450 = 300
+            progress = Math.min(100, (progressToVictory / victoryRange) * 100);
         }
         
         levelDisplay.innerHTML = `
@@ -1256,7 +1628,6 @@ class SortingGame {
                 <div class="level-progress">
                     <div class="progress-bar" style="width: ${progress}%"></div>
                 </div>
-                <span class="next-level">${nextThreshold ? `До ${nextThreshold}` : 'МАКС'}</span>
             </div>
         `;
         
@@ -1273,12 +1644,14 @@ class SortingGame {
 
      // Показ начальной подсказки
      showInitialTutorial() {
+         // Ставим игру на паузу во время показа туториала
+         this.pauseGame();
+         
          const tutorial = document.createElement('div');
          tutorial.className = 'tutorial-popup';
          tutorial.innerHTML = `
              <div class="tutorial-content">
                  <div class="tutorial-icon">💡</div>
-                 <h2>Добро пожаловать!</h2>
                  <p>Перетаскивайте объекты в правильные контейнеры</p>
                  <p>Собирайте комбо и бонусы для высоких результатов!</p>
              </div>
@@ -1286,13 +1659,15 @@ class SortingGame {
          
          document.body.appendChild(tutorial);
          
-         // Удаляем подсказку через 3 секунды
+         // Удаляем подсказку через 3 секунды и возобновляем игру
          setTimeout(() => {
              tutorial.style.opacity = '0';
              setTimeout(() => {
                  if (tutorial.parentNode) {
                      tutorial.parentNode.removeChild(tutorial);
                  }
+                 // Возобновляем игру после закрытия туториала
+                 this.resumeGame();
              }, 500);
          }, 3000);
      }
@@ -1372,8 +1747,7 @@ class SortingGame {
              paper: '📄',
              organic: '🍕',
              glass: '🍾',
-             battery: '🔋',
-             electronics: '📱'
+             battery: '🔋'
          };
          return icons[type] || '🗑️';
      }
@@ -1388,8 +1762,7 @@ class SortingGame {
              paper: ['rgba(241, 196, 15, 0.3)', 'rgba(241, 196, 15, 0.8)'],
              organic: ['rgba(39, 174, 96, 0.3)', 'rgba(39, 174, 96, 0.8)'],
              glass: ['rgba(52, 152, 219, 0.4)', 'rgba(52, 152, 219, 0.9)'],
-             battery: ['rgba(231, 76, 60, 0.3)', 'rgba(231, 76, 60, 0.8)'],
-             electronics: ['rgba(155, 89, 182, 0.3)', 'rgba(155, 89, 182, 0.8)']
+             battery: ['rgba(231, 76, 60, 0.3)', 'rgba(231, 76, 60, 0.8)']
          };
          
          [color1, color2] = baseColors[type] || baseColors.plastic;
@@ -1412,7 +1785,7 @@ class SortingGame {
          this.containerFillLevels[type] = 0;
          
          // Даем бонусные очки
-         const bonusPoints = 20;
+         const bonusPoints = 10;
          this.score += bonusPoints;
          this.updateScore();
          
@@ -1487,7 +1860,17 @@ class SortingGame {
      loadLeaderboard() {
          const savedLeaderboard = localStorage.getItem('sortingGameLeaderboard');
          if (savedLeaderboard) {
-             return JSON.parse(savedLeaderboard);
+             const leaderboard = JSON.parse(savedLeaderboard);
+             // Миграция старых записей без поля level и achievements
+             leaderboard.forEach(entry => {
+                 if (entry.level === undefined) {
+                     entry.level = 1; // Устанавливаем уровень 1 для старых записей
+                 }
+                 if (entry.achievements === undefined) {
+                     entry.achievements = []; // Пустой массив достижений для старых записей
+                 }
+             });
+             return leaderboard;
          }
          return [];
      }
@@ -1511,6 +1894,9 @@ class SortingGame {
 
      // Диалог ввода имени для лидерборда
      showNameInputDialog(gameStats) {
+         // Ставим игру на паузу во время диалога
+         this.pauseGame();
+         
          const overlay = document.createElement('div');
          overlay.className = 'leaderboard-overlay';
          
@@ -1593,7 +1979,8 @@ class SortingGame {
              level: gameStats.currentLevel,
              playTime: gameStats.playTime,
              date: new Date().toLocaleDateString('ru-RU'),
-             timestamp: Date.now()
+             timestamp: Date.now(),
+             achievements: gameStats.unlockedAchievements || []
          };
          
          this.leaderboard.push(newEntry);
@@ -1610,6 +1997,9 @@ class SortingGame {
 
      // Показать лидерборд
      showLeaderboard() {
+         // Ставим игру на паузу во время показа лидерборда
+         this.pauseGame();
+         
          const overlay = document.createElement('div');
          overlay.className = 'leaderboard-overlay';
          
@@ -1646,10 +2036,24 @@ class SortingGame {
                  const position = index + 1;
                  const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : position;
                  
+                 // Формируем строку с достижениями
+                 let achievementsHTML = '';
+                 if (entry.achievements && entry.achievements.length > 0) {
+                     // Находим соответствующие достижения по ID
+                     const achievementIcons = entry.achievements.map(achievementId => {
+                         const achievement = this.achievements.find(a => a.id === achievementId);
+                         return achievement ? achievement.icon : '';
+                     }).filter(icon => icon !== '').join(' ');
+                     
+                     if (achievementIcons) {
+                         achievementsHTML = ` ${achievementIcons}`;
+                     }
+                 }
+                 
                  leaderboardHTML += `
                      <div class="table-row ${position <= 3 ? 'top-three' : ''}">
                          <span class="position">${medal}</span>
-                         <span class="name">${entry.name}</span>
+                         <span class="name">${entry.name}${achievementsHTML}</span>
                          <span class="score">${entry.score}</span>
                          <span class="combo">${entry.maxCombo}</span>
                          <span class="level">${entry.level}</span>
@@ -1678,9 +2082,13 @@ class SortingGame {
          const newGameBtn = overlay.querySelector('#new-game');
          const clearBtn = overlay.querySelector('#clear-leaderboard');
          
-         closeBtn.addEventListener('click', () => {
+         const closeLeaderboard = () => {
              document.body.removeChild(overlay);
-         });
+             // Возобновляем игру при закрытии лидерборда
+             this.resumeGame();
+         };
+         
+         closeBtn.addEventListener('click', closeLeaderboard);
          
          newGameBtn.addEventListener('click', () => {
              document.body.removeChild(overlay);
@@ -1698,7 +2106,7 @@ class SortingGame {
          // Закрытие по клику вне диалога
          overlay.addEventListener('click', (e) => {
              if (e.target === overlay) {
-                 document.body.removeChild(overlay);
+                 closeLeaderboard();
              }
          });
      }
@@ -1712,66 +2120,79 @@ class SortingGame {
 
      // Перезапуск игры
      restartGame() {
-         // Останавливаем все таймеры
-         if (this.spawnTimer) {
-             clearTimeout(this.spawnTimer);
-             this.spawnTimer = null;
-         }
-         
-         // Сбрасываем все значения
-         this.score = 0;
-         this.correctAnswers = 0;
-         this.comboCount = 0;
-         this.maxCombo = 0;
-         this.comboMultiplier = 1;
-         this.currentLevel = 1;
-         this.unlockedTypes = ['plastic', 'paper', 'organic'];
-         this.currentSpawnInterval = this.baseSpawnInterval;
-         this.gameStartTime = Date.now();
-         this.perfectStreakStart = Date.now();
-         this.lastErrorTime = 0;
-         
-         // Сбрасываем статистику переработки
-         this.recyclingStats.totalItemsSorted = 0;
-         Object.keys(this.recyclingStats.itemsByType).forEach(type => {
-             this.recyclingStats.itemsByType[type] = 0;
-         });
-         
-         // Очищаем все объекты мусора
-         this.activeTrashItems.forEach(item => {
-             if (item.element && item.element.parentNode) {
-                 item.element.parentNode.removeChild(item.element);
-             }
-         });
-         this.activeTrashItems = [];
-         
-         // Сбрасываем заполнение контейнеров
-         Object.keys(this.containerFillLevels).forEach(type => {
-             this.containerFillLevels[type] = 0;
-         });
-         
-         // Удаляем дополнительные контейнеры
-         const containers = document.querySelectorAll('.container-btn');
-         containers.forEach((container, index) => {
-             if (index >= 3) { // Оставляем только первые 3 базовых контейнера
-                 container.remove();
-             }
-         });
-         
-         // Обновляем массив контейнеров
-         this.containers = Array.from(document.querySelectorAll('.container-btn'));
-         
-         // Обновляем интерфейс
-         this.updateScore();
-         this.updateComboDisplay();
-         this.updateLevelDisplay();
-         this.updateTrashCounter();
-         this.initializeContainerFills();
-         
-         // Перезапускаем игру
-         this.startSpawning();
-         
-         console.log('Игра перезапущена');
+        // Останавливаем все таймеры
+        if (this.spawnTimer) {
+            clearTimeout(this.spawnTimer);
+            this.spawnTimer = null;
+        }
+        
+        // Останавливаем атмосферные эффекты
+        this.stopAtmosphericEffects();
+        
+        // Сбрасываем все значения
+        this.score = 0;
+        this.correctAnswers = 0;
+        this.comboCount = 0;
+        this.maxCombo = 0;
+        this.comboMultiplier = 1;
+        this.currentLevel = 1;
+        this.unlockedTypes = ['plastic', 'paper', 'organic'];
+        this.currentSpawnInterval = this.baseSpawnInterval;
+        this.gameStartTime = Date.now();
+        this.perfectStreakStart = Date.now();
+        this.lastErrorTime = 0;
+        
+        // Сбрасываем достижения
+        this.correctAnswersStreak = 0;
+        this.unlockedAchievements = [];
+        this.achievements.forEach(achievement => {
+            achievement.unlocked = false;
+        });
+        
+        // Сбрасываем статистику переработки
+        this.recyclingStats.totalItemsSorted = 0;
+        Object.keys(this.recyclingStats.itemsByType).forEach(type => {
+            this.recyclingStats.itemsByType[type] = 0;
+        });
+        
+        // Очищаем все объекты мусора
+        this.activeTrashItems.forEach(item => {
+            if (item.element && item.element.parentNode) {
+                item.element.parentNode.removeChild(item.element);
+            }
+        });
+        this.activeTrashItems = [];
+        
+        // Сбрасываем заполнение контейнеров
+        Object.keys(this.containerFillLevels).forEach(type => {
+            this.containerFillLevels[type] = 0;
+        });
+        
+        // Удаляем дополнительные контейнеры
+        const containers = document.querySelectorAll('.container-btn');
+        containers.forEach((container, index) => {
+            if (index >= 3) { // Оставляем только первые 3 базовых контейнера
+                container.remove();
+            }
+        });
+        
+        // Обновляем массив контейнеров
+        this.containers = Array.from(document.querySelectorAll('.container-btn'));
+        
+        // Обновляем интерфейс
+        this.updateScore();
+        this.updateComboDisplay();
+        this.updateLevelDisplay();
+        this.updateTrashCounter();
+        this.initializeContainerFills();
+        
+        // Перезапускаем игру
+        this.startSpawning();
+        
+        // Перезапускаем атмосферные эффекты
+        this.initAtmosphericEffects();
+        
+        console.log('Игра перезапущена');
      }
 
      // Показать лидерборд (кнопка в интерфейсе)
@@ -1787,8 +2208,7 @@ class SortingGame {
              paper: '📄 Бумага', 
              organic: '🌱 Органика',
              glass: '🍾 Стекло',
-             battery: '🔋 Батарейки',
-             electronics: '📱 Электроника'
+             battery: '⚠️ Опасные отходы'
          };
          
          for (const [type, count] of Object.entries(this.recyclingStats.itemsByType)) {
@@ -1825,13 +2245,8 @@ class SortingGame {
              },
              battery: { 
                  text: 'Предотвращено загрязнения', 
-                 perItem: 20, // кв.м почвы
-                 unit: 'кв.м почвы'
-             },
-             electronics: { 
-                 text: 'Извлечено ценных металлов', 
-                 perItem: 0.1, // грамм золота/серебра
-                 unit: 'г'
+                 perItem: 20, // кв.м почвы/воды
+                 unit: 'кв.м почвы/воды'
              }
          };
          
@@ -1847,21 +2262,431 @@ class SortingGame {
          return result || '<p>Начните сортировать мусор, чтобы увидеть экологический эффект!</p>';
      }
 
-     // Завершение игры вручную
-     endGame() {
-         // Останавливаем спавн
-         if (this.spawnTimer) {
-             clearTimeout(this.spawnTimer);
-             this.spawnTimer = null;
+     // Показ информации о времени разложения
+     showDecompositionInfo(type) {
+         // Удаляем предыдущую информацию если есть
+         this.hideDecompositionInfo();
+         
+         const spawnArea = document.getElementById('trash-spawn-area');
+         const decomp = this.decompositionTime[type];
+         
+         if (!decomp || !spawnArea) return;
+         
+         const infoDiv = document.createElement('div');
+         infoDiv.id = 'decomposition-info';
+         infoDiv.className = 'decomposition-info';
+         
+         let timeText;
+         if (decomp.unit === "месяцев") {
+             timeText = `${decomp.min}-${decomp.max} ${decomp.unit}`;
+         } else {
+             timeText = decomp.min === decomp.max ? `${decomp.min} ${decomp.unit}` : `${decomp.min}-${decomp.max} ${decomp.unit}`;
          }
          
-         // Показываем финальные статистики и проверяем рекорд
-         setTimeout(() => {
-             this.checkForNewRecord();
-         }, 500);
+         // Выбираем иконку и цвет в зависимости от скорости разложения
+         let icon, colorClass;
+         if (decomp.unit === "месяцев") {
+             icon = '🌱'; // Быстро разлагается
+             colorClass = 'fast-decomp';
+         } else if (decomp.max <= 100) {
+             icon = '⏰'; // Медленно разлагается
+             colorClass = 'slow-decomp';
+         } else {
+             icon = '⚠️'; // Очень медленно
+             colorClass = 'very-slow-decomp';
+         }
          
-         console.log('Игра завершена вручную');
+         infoDiv.innerHTML = `
+             <div class="decomp-content">
+                 ${icon} <strong>Время разложения:</strong><br>
+                 ${timeText}
+             </div>
+         `;
+         infoDiv.className += ` ${colorClass}`;
+         
+         spawnArea.appendChild(infoDiv);
      }
+     
+     // Скрытие информации о времени разложения
+     hideDecompositionInfo() {
+         const infoDiv = document.getElementById('decomposition-info');
+         if (infoDiv && infoDiv.parentNode) {
+             infoDiv.parentNode.removeChild(infoDiv);
+         }
+     }
+
+     // Показ факта дня при запуске игры
+     showDailyFact() {
+         // Ставим игру на паузу во время показа факта
+         this.pauseGame();
+         
+         // Создаем более разнообразный выбор факта
+         const today = new Date();
+         const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+         const currentHour = today.getHours();
+         const currentMinute = today.getMinutes();
+         
+         // Комбинируем день, час и случайность для разнообразия
+         const seed = dayOfYear + currentHour + Math.floor(currentMinute / 15); // Меняется каждые 15 минут
+         const factIndex = seed % this.dailyFacts.length;
+         const dailyFact = this.dailyFacts[factIndex];
+         
+         // Создаем оверлей для факта дня
+         const overlay = document.createElement('div');
+         overlay.className = 'daily-fact-overlay';
+         
+         overlay.innerHTML = `
+             <div class="daily-fact-dialog">
+                 <div class="daily-fact-header">
+                     <span class="daily-fact-icon">${dailyFact.icon}</span>
+                     <h2>Факт дня</h2>
+                     <span class="daily-fact-date">${today.toLocaleDateString('ru-RU')}</span>
+                 </div>
+                 <div class="daily-fact-content">
+                     <h3>${dailyFact.title}</h3>
+                     <p>${dailyFact.text}</p>
+                 </div>
+                 <div class="daily-fact-footer">
+                     <button id="start-game-btn" class="btn-primary">🎮 Начать игру</button>
+                 </div>
+             </div>
+         `;
+         
+         document.body.appendChild(overlay);
+         
+         // Добавляем обработчики событий
+         const startGameBtn = document.getElementById('start-game-btn');
+         
+         const startGame = () => {
+             document.body.removeChild(overlay);
+             this.showInitialTutorial();
+             this.startSpawning();
+             this.startOverflowMonitoring();
+         };
+         
+         startGameBtn.addEventListener('click', startGame);
+         
+         // Автоматически запускаем игру через 15 секунд
+         setTimeout(() => {
+             if (overlay.parentNode) {
+                 startGame();
+             }
+         }, 15000);
+     }
+
+     // Завершение игры вручную
+     endGame() {
+        // Останавливаем спавн мусора
+        if (this.spawnTimer) {
+            clearTimeout(this.spawnTimer);
+            this.spawnTimer = null;
+        }
+        
+        // Получаем статистику игры
+        const gameStats = this.getGameStats();
+        
+        // Проверяем новый рекорд
+        this.checkForNewRecord(gameStats);
+    }
+
+    // Методы атмосферных эффектов
+    initAtmosphericEffects() {
+        this.atmosphericTimers = {
+            leaves: null,
+            dust: null
+        };
+        
+        // Запускаем эффекты с небольшими задержками
+        setTimeout(() => this.startFallingLeaves(), 1000);
+        setTimeout(() => this.startDustParticles(), 2000);
+    }
+
+    startFallingLeaves() {
+        const container = document.getElementById('falling-leaves');
+        const leafEmojis = ['🍃', '🌿', '🍂', '🌱'];
+        
+        const createLeaf = () => {
+            const leaf = document.createElement('div');
+            leaf.className = 'falling-leaf';
+            
+            // Случайный тип листа
+            leaf.textContent = leafEmojis[Math.floor(Math.random() * leafEmojis.length)];
+            
+            // Случайные стили
+            const speeds = ['slow', 'medium', 'fast'];
+            leaf.classList.add(speeds[Math.floor(Math.random() * speeds.length)]);
+            
+            // Случайная позиция по горизонтали
+            leaf.style.left = Math.random() * 100 + '%';
+            
+            // Случайная задержка анимации
+            leaf.style.animationDelay = Math.random() * 2 + 's';
+            
+            container.appendChild(leaf);
+            
+            // Удаляем после завершения анимации
+            setTimeout(() => {
+                if (leaf.parentNode) {
+                    leaf.parentNode.removeChild(leaf);
+                }
+            }, 10000);
+        };
+        
+        // Создаем листья каждые 3-6 секунд
+        const scheduleNextLeaf = () => {
+            this.atmosphericTimers.leaves = setTimeout(() => {
+                createLeaf();
+                scheduleNextLeaf();
+            }, Math.random() * 3000 + 3000);
+        };
+        
+        scheduleNextLeaf();
+    }
+
+    startDustParticles() {
+        const container = document.getElementById('dust-particles');
+        
+        const createDustParticle = () => {
+            const particle = document.createElement('div');
+            particle.className = 'dust-particle';
+            
+            // Случайная скорость
+            const speeds = ['slow', 'medium', 'fast'];
+            particle.classList.add(speeds[Math.floor(Math.random() * speeds.length)]);
+            
+            // Случайная позиция
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 5 + 's';
+            
+            // Случайный размер
+            const size = Math.random() * 2 + 1;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            
+            container.appendChild(particle);
+            
+            // Удаляем после завершения анимации
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, 15000);
+        };
+        
+        // Создаем частицы пыли каждые 1-3 секунды
+        const scheduleNextDust = () => {
+            this.atmosphericTimers.dust = setTimeout(() => {
+                createDustParticle();
+                scheduleNextDust();
+            }, Math.random() * 2000 + 1000);
+        };
+        
+        scheduleNextDust();
+    }
+
+    startRecyclingRain() {
+        const container = document.getElementById('recycling-rain');
+        const recyclingEmojis = ['♻️', '🔄', '🌍', '💚', '🌿', '⚡', '💧', '🌟'];
+        
+        const createRecyclingDrop = () => {
+            const drop = document.createElement('div');
+            drop.className = 'recycling-drop';
+            
+            // Случайный символ переработки
+            drop.textContent = recyclingEmojis[Math.floor(Math.random() * recyclingEmojis.length)];
+            
+            // Случайная скорость
+            const speeds = ['slow', 'medium', 'fast'];
+            drop.classList.add(speeds[Math.floor(Math.random() * speeds.length)]);
+            
+            // Случайная позиция
+            drop.style.left = Math.random() * 100 + '%';
+            drop.style.animationDelay = Math.random() * 3 + 's';
+            
+            container.appendChild(drop);
+            
+            // Удаляем после завершения анимации
+            setTimeout(() => {
+                if (drop.parentNode) {
+                    drop.parentNode.removeChild(drop);
+                }
+            }, 8000);
+        };
+        
+        // Создаем капли переработки каждые 4-8 секунд
+        const scheduleNextDrop = () => {
+            this.atmosphericTimers.rain = setTimeout(() => {
+                createRecyclingDrop();
+                scheduleNextDrop();
+            }, Math.random() * 4000 + 4000);
+        };
+        
+        scheduleNextDrop();
+    }
+
+    // Метод для остановки атмосферных эффектов (при необходимости)
+    stopAtmosphericEffects() {
+        if (this.atmosphericTimers) {
+            Object.values(this.atmosphericTimers).forEach(timer => {
+                if (timer) clearTimeout(timer);
+            });
+        }
+        
+        // Очищаем все атмосферные элементы
+        ['falling-leaves', 'dust-particles'].forEach(id => {
+            const container = document.getElementById(id);
+            if (container) {
+                container.innerHTML = '';
+            }
+        });
+    }
+
+    // Эффект материализации контейнера
+    materializeContainer(container, type) {
+        // Добавляем класс материализации
+        container.classList.add('materializing');
+        
+        // Создаем волну материализации
+        const wave = document.createElement('div');
+        wave.className = 'materialize-wave';
+        container.appendChild(wave);
+        
+        // Создаем энергетические частицы
+        this.createEnergyParticles(container, type);
+        
+        // Удаляем эффекты через 2 секунды
+        setTimeout(() => {
+            container.classList.remove('materializing');
+            if (wave.parentNode) {
+                wave.parentNode.removeChild(wave);
+            }
+            
+            // Добавляем финальный эффект свечения
+            container.style.boxShadow = '0 0 30px rgba(255, 255, 255, 0.8)';
+            setTimeout(() => {
+                container.style.boxShadow = '';
+            }, 1000);
+        }, 2000);
+    }
+
+    // Создание энергетических частиц
+    createEnergyParticles(container, type) {
+        const particleColors = {
+            glass: 'cyan',
+            battery: 'red', 
+            metal: 'gray',
+            plastic: 'blue',
+            paper: 'yellow',
+            organic: 'green'
+        };
+        
+        const particleColor = particleColors[type] || 'blue';
+        const particleCount = 12;
+        
+        for (let i = 0; i < particleCount; i++) {
+            setTimeout(() => {
+                const particle = document.createElement('div');
+                particle.className = `energy-particle ${particleColor}`;
+                
+                // Случайная позиция вокруг контейнера
+                const angle = (i / particleCount) * 2 * Math.PI;
+                const radius = 40 + Math.random() * 20;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                
+                particle.style.left = `calc(50% + ${x}px)`;
+                particle.style.top = `calc(50% + ${y}px)`;
+                
+                // Случайная задержка анимации
+                particle.style.animationDelay = Math.random() * 0.5 + 's';
+                
+                container.appendChild(particle);
+                
+                // Удаляем частицу после анимации
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 1500);
+            }, i * 100); // Задержка между частицами
+        }
+    }
+
+    // Изменение цветовой схемы в зависимости от уровня
+    updateColorScheme() {
+        const root = document.documentElement;
+        
+        // Определяем цветовую схему на основе уровня
+        let levelPrefix;
+        if (this.currentLevel === 1) {
+            levelPrefix = 'level1';
+        } else if (this.currentLevel === 2) {
+            levelPrefix = 'level2';
+        } else {
+            levelPrefix = 'level3';
+        }
+        
+        // Обновляем CSS переменные
+        root.style.setProperty('--current-primary', `var(--${levelPrefix}-primary)`);
+        root.style.setProperty('--current-secondary', `var(--${levelPrefix}-secondary)`);
+        root.style.setProperty('--current-accent', `var(--${levelPrefix}-accent)`);
+        root.style.setProperty('--current-bg', `var(--${levelPrefix}-bg)`);
+        root.style.setProperty('--current-particle', `var(--${levelPrefix}-particle)`);
+        
+        // Добавляем эффект перехода цвета
+        this.createColorTransitionEffect();
+        
+        console.log(`Цветовая схема изменена на уровень ${this.currentLevel} (${levelPrefix})`);
+    }
+
+    // Эффект перехода цвета
+    createColorTransitionEffect() {
+        // Создаем волну цвета по экрану
+        const colorWave = document.createElement('div');
+        colorWave.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--current-primary);
+            opacity: 0.3;
+            z-index: 1000;
+            pointer-events: none;
+            animation: colorWaveAnimation 1.5s ease-out forwards;
+        `;
+        
+        // Добавляем CSS анимацию для волны цвета
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes colorWaveAnimation {
+                0% {
+                    left: -100%;
+                    opacity: 0.3;
+                }
+                50% {
+                    left: 0%;
+                    opacity: 0.5;
+                }
+                100% {
+                    left: 100%;
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        document.body.appendChild(colorWave);
+        
+        // Удаляем элементы после анимации
+        setTimeout(() => {
+            if (colorWave.parentNode) {
+                colorWave.parentNode.removeChild(colorWave);
+            }
+            if (style.parentNode) {
+                style.parentNode.removeChild(style);
+            }
+        }, 1500);
+    }
 }
 
 // Запуск игры после загрузки страницы

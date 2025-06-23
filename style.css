@@ -4,14 +4,48 @@
     box-sizing: border-box;
 }
 
+/* Цветовые схемы для разных уровней */
+:root {
+    /* Уровень 1 - Экологичный зеленый */
+    --level1-primary: linear-gradient(135deg, #27ae60, #2ecc71);
+    --level1-secondary: linear-gradient(135deg, #16a085, #1abc9c);
+    --level1-accent: #2ecc71;
+    --level1-bg: linear-gradient(135deg, #a8e6cf, #dcedc8);
+    --level1-particle: rgba(46, 204, 113, 0.8);
+    
+    /* Уровень 2 - Энергичный синий */
+    --level2-primary: linear-gradient(135deg, #3498db, #2980b9);
+    --level2-secondary: linear-gradient(135deg, #5dade2, #85c1e9);
+    --level2-accent: #3498db;
+    --level2-bg: linear-gradient(135deg, #85c1e9, #aed6f1);
+    --level2-particle: rgba(52, 152, 219, 0.8);
+    
+    /* Уровень 3+ - Золотой/Фиолетовый (победный) */
+    --level3-primary: linear-gradient(135deg, #9b59b6, #8e44ad);
+    --level3-secondary: linear-gradient(135deg, #f39c12, #e67e22);
+    --level3-accent: #9b59b6;
+    --level3-bg: linear-gradient(135deg, #d7bde2, #f8c471);
+    --level3-particle: rgba(155, 89, 182, 0.8);
+    
+    /* Текущие активные цвета */
+    --current-primary: var(--level1-primary);
+    --current-secondary: var(--level1-secondary);
+    --current-accent: var(--level1-accent);
+    --current-bg: var(--level1-bg);
+    --current-particle: var(--level1-particle);
+}
+
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--current-bg);
     color: #333;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: backgroundGlow 8s ease-in-out infinite;
+    overflow-x: hidden;
 }
 
 .container {
@@ -21,6 +55,29 @@ body {
     display: flex;
     flex-direction: column;
     gap: 30px;
+    position: relative;
+}
+
+.container::before {
+    content: '🌿';
+    position: absolute;
+    top: 50%;
+    left: -30px;
+    font-size: 1.2rem;
+    animation: leafFloat 5s ease-in-out infinite;
+    opacity: 0.4;
+    z-index: 0;
+}
+
+.container::after {
+    content: '🍃';
+    position: absolute;
+    top: 20%;
+    right: -25px;
+    font-size: 1rem;
+    animation: leafFloat 4s ease-in-out infinite reverse;
+    opacity: 0.5;
+    z-index: 0;
 }
 
 header {
@@ -28,7 +85,35 @@ header {
     background: rgba(255, 255, 255, 0.95);
     padding: 20px;
     border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.2),
+        0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    backdrop-filter: blur(15px);
+    position: relative;
+    overflow: hidden;
+    border: 2px solid transparent;
+    border-image: var(--current-primary) 1;
+}
+
+header::before {
+    content: '🌱';
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    font-size: 1.5rem;
+    animation: ecoFloat 3s ease-in-out infinite;
+    opacity: 0.6;
+}
+
+header::after {
+    content: '♻️';
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.5rem;
+    animation: ecoSpin 4s linear infinite;
+    opacity: 0.7;
 }
 
 h1 {
@@ -60,6 +145,9 @@ h1 {
     min-width: 0;
     flex: 1;
     justify-content: center;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    padding: 5px;
+    border-radius: 8px;
 }
 
 .stat-item span {
@@ -78,23 +166,23 @@ h1 {
     margin-left: 2px;
 }
 
-#trash-count {
-    font-weight: 700;
-    color: #2c3e50;
-}
+
 
 
 
 #game-area {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(245,247,250,0.85) 100%);
+    border-radius: 28px;
     padding: 40px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 8px 25px rgba(0,0,0,0.08), inset 0 2px 12px rgba(255,255,255,0.7), inset 0 -2px 8px rgba(0,0,0,0.04);
     min-height: 300px;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    transition: all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+    backdrop-filter: blur(22px) saturate(180%);
+    border: 1.5px solid rgba(255,255,255,0.35);
 }
 
 #trash-spawn-area {
@@ -103,54 +191,197 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px dashed #bdc3c7;
-    border-radius: 15px;
+    border: 2.5px solid rgba(189,195,199,0.5);
+    border-radius: 22px;
     position: relative;
-    transition: all 0.3s ease;
+    transition: all 0.6s cubic-bezier(0.25,0.46,0.45,0.94);
+    background: linear-gradient(135deg, rgba(255,255,255,0.45), rgba(245,247,250,0.35));
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10), inset 0 2px 12px rgba(255,255,255,0.5), inset 0 -2px 8px rgba(0,0,0,0.03);
+    backdrop-filter: blur(14px);
 }
 
-/* Состояния переполнения */
 #trash-spawn-area.warning {
-    border-color: #f39c12;
-    background-color: rgba(243, 156, 18, 0.1);
-    box-shadow: 0 0 20px rgba(243, 156, 18, 0.3);
+    border-color: #f7b731;
+    background: linear-gradient(135deg, rgba(255, 243, 205, 0.7), rgba(255, 236, 179, 0.6));
+    box-shadow: 0 0 30px 0 rgba(241,196,15,0.18), 0 4px 24px rgba(241,196,15,0.10), inset 0 2px 12px rgba(241,196,15,0.18);
+    transform: scale(1.02);
 }
 
 #trash-spawn-area.danger {
     border-color: #e74c3c;
-    background-color: rgba(231, 76, 60, 0.15);
-    box-shadow: 0 0 30px rgba(231, 76, 60, 0.5);
+    background: linear-gradient(135deg, rgba(255, 220, 220, 0.8), rgba(255, 240, 240, 0.7));
+    box-shadow: 0 0 40px 0 rgba(231,76,60,0.22), 0 4px 24px rgba(231,76,60,0.12), inset 0 2px 16px rgba(231,76,60,0.18);
+    transform: scale(1.05);
     animation: dangerPulse 2s infinite;
-}
-
-@keyframes dangerPulse {
-    0%, 100% {
-        box-shadow: 0 0 30px rgba(231, 76, 60, 0.5);
-    }
-    50% {
-        box-shadow: 0 0 40px rgba(231, 76, 60, 0.8);
-    }
 }
 
 .trash-item {
     width: 80px;
     height: 80px;
-    border-radius: 50%;
+    border-radius: 45% 55% 52% 48% / 48% 42% 58% 52%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 2rem;
     cursor: grab;
-    transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 
+        0 3px 8px rgba(0, 0, 0, 0.4),
+        0 1px 3px rgba(0, 0, 0, 0.6),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.2),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.1);
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+    position: relative;
+    filter: contrast(1.1) saturate(0.8);
 }
 
 .trash-item:hover {
-    transform: scale(1.1);
+    transform: scale(1.15) translateY(-5px) rotateY(10deg);
+    box-shadow: 
+        0 10px 25px rgba(0, 0, 0, 0.4),
+        inset 0 3px 8px rgba(255, 255, 255, 0.3),
+        0 0 20px rgba(255, 255, 255, 0.2);
+    filter: brightness(1.1) contrast(1.2);
+}
+
+/* Грязный мусор - базовые стили */
+.dirty-trash {
+    position: relative;
+    overflow: visible;
+}
+
+/* Пятна и царапины для всех типов мусора */
+.dirty-trash::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 15%;
+    width: 25%;
+    height: 25%;
+    background: radial-gradient(circle, rgba(101, 67, 33, 0.6) 30%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.dirty-trash::after {
+    content: '';
+    position: absolute;
+    top: 60%;
+    right: 20%;
+    width: 30%;
+    height: 15%;
+    background: linear-gradient(45deg, rgba(139, 69, 19, 0.4) 0%, transparent 100%);
+    border-radius: 80% 20% 60% 40%;
+    z-index: 1;
+}
+
+/* Специфичные стили для каждого типа грязного мусора */
+.dirty-plastic::before {
+    background: radial-gradient(circle, rgba(85, 107, 47, 0.5) 40%, transparent 80%);
+    top: 25%;
+    left: 10%;
+    width: 20%;
+    height: 20%;
+}
+
+.dirty-plastic::after {
+    background: linear-gradient(130deg, rgba(139, 69, 19, 0.6) 0%, transparent 70%);
+    top: 70%;
+    right: 15%;
+    width: 35%;
+    height: 12%;
+}
+
+.dirty-paper::before {
+    background: radial-gradient(ellipse, rgba(101, 67, 33, 0.7) 20%, transparent 60%);
+    top: 15%;
+    left: 20%;
+    width: 30%;
+    height: 20%;
+    transform: rotate(15deg);
+}
+
+.dirty-paper::after {
+    background: linear-gradient(45deg, rgba(160, 82, 45, 0.5) 0%, rgba(139, 69, 19, 0.3) 50%, transparent 100%);
+    top: 65%;
+    right: 10%;
+    width: 40%;
+    height: 18%;
+    border-radius: 60% 40% 70% 30%;
+}
+
+.dirty-organic::before {
+    background: radial-gradient(circle, rgba(85, 107, 47, 0.8) 35%, rgba(101, 67, 33, 0.4) 70%, transparent 100%);
+    top: 20%;
+    left: 25%;
+    width: 25%;
+    height: 25%;
+}
+
+.dirty-organic::after {
+    background: linear-gradient(200deg, rgba(139, 69, 19, 0.7) 0%, rgba(85, 107, 47, 0.5) 60%, transparent 100%);
+    top: 50%;
+    right: 25%;
+    width: 30%;
+    height: 30%;
+    border-radius: 70% 30% 40% 60%;
+}
+
+.dirty-glass::before {
+    background: linear-gradient(45deg, rgba(169, 169, 169, 0.4) 0%, rgba(105, 105, 105, 0.2) 50%, transparent 100%);
+    top: 10%;
+    left: 30%;
+    width: 40%;
+    height: 8%;
+    border-radius: 50% 50% 50% 50% / 80% 80% 20% 20%;
+    transform: rotate(-20deg);
+}
+
+.dirty-glass::after {
+    background: linear-gradient(135deg, rgba(128, 128, 128, 0.3) 0%, transparent 70%);
+    top: 70%;
+    right: 20%;
+    width: 25%;
+    height: 25%;
+    border-radius: 30% 70% 60% 40%;
+}
+
+.dirty-battery::before {
+    background: radial-gradient(circle, rgba(139, 69, 19, 0.8) 30%, rgba(101, 67, 33, 0.5) 60%, transparent 100%);
+    top: 30%;
+    left: 15%;
+    width: 25%;
+    height: 25%;
+}
+
+.dirty-battery::after {
+    background: linear-gradient(90deg, rgba(160, 82, 45, 0.6) 0%, rgba(139, 69, 19, 0.4) 70%, transparent 100%);
+    top: 15%;
+    right: 10%;
+    width: 35%;
+    height: 15%;
+    border-radius: 50% 20% 80% 50%;
+}
+
+.dirty-metal::before {
+    background: radial-gradient(ellipse, rgba(139, 69, 19, 0.7) 25%, rgba(160, 82, 45, 0.4) 65%, transparent 100%);
+    top: 25%;
+    left: 20%;
+    width: 30%;
+    height: 20%;
+    transform: rotate(45deg);
+}
+
+.dirty-metal::after {
+    background: linear-gradient(160deg, rgba(101, 67, 33, 0.6) 0%, rgba(139, 69, 19, 0.3) 80%, transparent 100%);
+    top: 60%;
+    right: 15%;
+    width: 40%;
+    height: 20%;
+    border-radius: 40% 60% 50% 50%;
 }
 
 .trash-item:active {
@@ -185,10 +416,12 @@ h1 {
     font-weight: 600;
     color: white;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     box-shadow: 
-        0 5px 15px rgba(0, 0, 0, 0.2),
-        inset 0 2px 5px rgba(255, 255, 255, 0.3);
+        0 8px 25px rgba(0, 0, 0, 0.25),
+        0 4px 10px rgba(0, 0, 0, 0.15),
+        inset 0 2px 5px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -196,6 +429,9 @@ h1 {
     position: relative;
     overflow: visible;
     perspective: 1000px;
+    backdrop-filter: blur(5px);
+    transform-style: preserve-3d;
+    animation: containerBreathing 4s ease-in-out infinite;
 }
 
 /* Левая створка крышки */
@@ -245,10 +481,15 @@ h1 {
 }
 
 .container-btn:hover {
-    transform: translateY(-8px);
+    transform: translateY(-15px) scale(1.08) rotateX(8deg) rotateY(2deg);
     box-shadow: 
-        0 12px 30px rgba(0, 0, 0, 0.3),
-        inset 0 2px 8px rgba(255, 255, 255, 0.4);
+        0 20px 50px rgba(0, 0, 0, 0.3),
+        0 10px 25px rgba(0, 0, 0, 0.2),
+        inset 0 3px 12px rgba(255, 255, 255, 0.6),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.15),
+        0 0 40px rgba(255, 255, 255, 0.4);
+    filter: brightness(1.15) saturate(1.2) drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+    animation: containerBreathing 2s ease-in-out infinite, containerPulse 1.5s ease-in-out infinite;
 }
 
 .container-btn:active {
@@ -264,6 +505,15 @@ h1 {
     background: linear-gradient(135deg, #5dade2, #3498db);
 }
 
+.container-btn.blue:hover {
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.3),
+        0 10px 25px rgba(0, 0, 0, 0.2),
+        inset 0 3px 12px rgba(255, 255, 255, 0.6),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.15),
+        0 0 40px rgba(52, 152, 219, 0.6);
+}
+
 .container-btn.yellow {
     background: linear-gradient(135deg, #f1c40f 0%, #f39c12 50%, #d68910 100%);
 }
@@ -273,6 +523,15 @@ h1 {
     background: linear-gradient(135deg, #f7dc6f, #f1c40f);
 }
 
+.container-btn.yellow:hover {
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.3),
+        0 10px 25px rgba(0, 0, 0, 0.2),
+        inset 0 3px 12px rgba(255, 255, 255, 0.6),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.15),
+        0 0 40px rgba(241, 196, 15, 0.7);
+}
+
 .container-btn.green {
     background: linear-gradient(135deg, #27ae60 0%, #229954 50%, #1e8449 100%);
 }
@@ -280,6 +539,15 @@ h1 {
 .container-btn.green::before,
 .container-btn.green::after {
     background: linear-gradient(135deg, #58d68d, #27ae60);
+}
+
+.container-btn.green:hover {
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.3),
+        0 10px 25px rgba(0, 0, 0, 0.2),
+        inset 0 3px 12px rgba(255, 255, 255, 0.6),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.15),
+        0 0 40px rgba(39, 174, 96, 0.6);
 }
 
 /* Drag and Drop стили с анимацией открытия крышки */
@@ -350,31 +618,38 @@ h1 {
 /* Обратная связь */
 .feedback {
     position: absolute;
-    top: 20px;
+    top: 0;
     left: 50%;
-    transform: translateX(-50%);
-    padding: 10px 20px;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    animation: feedbackAppear 0.3s ease-out;
-    z-index: 10;
+    transform: translate(-50%, -60%);
+    padding: 14px 28px;
+    border-radius: 18px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    z-index: 1000;
+    animation: feedbackAppear 2s ease-out forwards;
+    backdrop-filter: blur(12px) saturate(180%);
+    border: 1.5px solid rgba(255,255,255,0.35);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08), inset 0 2px 8px rgba(255,255,255,0.5);
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(245,247,250,0.92));
+    color: #2c3e50;
 }
 
 .feedback.success {
-    background: linear-gradient(135deg, #27ae60, #229954);
-    color: white;
+    border-color: #27ae60;
+    background: linear-gradient(135deg, rgba(46,204,113,0.13), rgba(39,174,96,0.10), rgba(255,255,255,0.95));
+    color: #1e824c;
 }
 
 .feedback.error {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
+    border-color: #e74c3c;
+    background: linear-gradient(135deg, rgba(231,76,60,0.13), rgba(192,57,43,0.10), rgba(255,255,255,0.95));
+    color: #c0392b;
 }
 
 .feedback.info {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
+    border-color: #3498db;
+    background: linear-gradient(135deg, rgba(52,152,219,0.13), rgba(41,128,185,0.10), rgba(255,255,255,0.95));
+    color: #217dbb;
 }
 
 /* Анимации */
@@ -392,15 +667,23 @@ h1 {
 @keyframes spawnItem {
     0% {
         opacity: 0;
-        transform: scale(0) rotate(180deg);
+        transform: scale(0) rotate(180deg) translateY(-100px);
+        filter: blur(10px);
     }
-    50% {
-        opacity: 0.8;
-        transform: scale(1.2) rotate(90deg);
+    30% {
+        opacity: 0.6;
+        transform: scale(0.8) rotate(120deg) translateY(-20px);
+        filter: blur(5px);
+    }
+    70% {
+        opacity: 0.9;
+        transform: scale(1.15) rotate(30deg) translateY(5px);
+        filter: blur(1px);
     }
     100% {
         opacity: 1;
-        transform: scale(1) rotate(0deg);
+        transform: scale(1) rotate(0deg) translateY(0);
+        filter: blur(0);
     }
 }
 
@@ -412,6 +695,114 @@ h1 {
     50% {
         opacity: 0.8;
         transform: scale(1);
+    }
+}
+
+@keyframes containerBreathing {
+    0%, 100% {
+        transform: scale(1) rotateY(0deg);
+        box-shadow: 
+            0 8px 25px rgba(0, 0, 0, 0.25),
+            0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+    50% {
+        transform: scale(1.02) rotateY(1deg);
+        box-shadow: 
+            0 10px 30px rgba(0, 0, 0, 0.3),
+            0 6px 15px rgba(0, 0, 0, 0.2);
+    }
+}
+
+@keyframes containerPulse {
+    0%, 100% {
+        filter: brightness(1.15) saturate(1.2) drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+    }
+    50% {
+        filter: brightness(1.25) saturate(1.4) drop-shadow(0 0 30px rgba(255, 255, 255, 0.5));
+    }
+}
+
+@keyframes backgroundGlow {
+    0%, 100% {
+        background: 
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%),
+            linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    33% {
+        background: 
+            radial-gradient(circle at 80% 20%, rgba(120, 119, 198, 0.4) 0%, transparent 60%),
+            radial-gradient(circle at 20% 80%, rgba(255, 119, 198, 0.2) 0%, transparent 60%),
+            radial-gradient(circle at 60% 60%, rgba(120, 219, 255, 0.15) 0%, transparent 60%),
+            linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    66% {
+        background: 
+            radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.25) 0%, transparent 45%),
+            radial-gradient(circle at 60% 10%, rgba(255, 119, 198, 0.3) 0%, transparent 55%),
+            radial-gradient(circle at 20% 80%, rgba(120, 219, 255, 0.2) 0%, transparent 65%),
+            linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+}
+
+@keyframes ecoFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-8px) rotate(5deg);
+    }
+}
+
+@keyframes ecoSpin {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.1);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+@keyframes leafFloat {
+    0%, 100% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-10px) translateX(5px) rotate(10deg);
+    }
+    50% {
+        transform: translateY(-5px) translateX(-3px) rotate(-5deg);
+    }
+    75% {
+        transform: translateY(-15px) translateX(8px) rotate(15deg);
+    }
+}
+
+@keyframes levelGlow {
+    0%, 100% {
+        box-shadow: 
+            0 5px 20px rgba(0, 0, 0, 0.1),
+            inset 0 2px 5px rgba(255, 255, 255, 0.2),
+            0 0 30px rgba(241, 196, 15, 0.2);
+    }
+    50% {
+        box-shadow: 
+            0 8px 25px rgba(0, 0, 0, 0.15),
+            inset 0 3px 8px rgba(255, 255, 255, 0.3),
+            0 0 40px rgba(241, 196, 15, 0.4);
+    }
+}
+
+@keyframes levelShimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
     }
 }
 
@@ -448,6 +839,50 @@ h1 {
     }
     100% {
         transform: translate(var(--vx), var(--vy)) scale(0);
+        opacity: 0;
+    }
+}
+
+/* Новые улучшенные анимации частиц */
+@keyframes sparkParticle {
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    70% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--vx), var(--vy)) scale(0.2) rotate(var(--rotation));
+        opacity: 0;
+    }
+}
+
+@keyframes starParticle {
+    0% {
+        transform: translate(0, 0) scale(0.5) rotate(0deg);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--vx), var(--vy)) scale(1.5) rotate(var(--rotation));
+        opacity: 0;
+    }
+}
+
+@keyframes glowRing {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2.5);
         opacity: 0;
     }
 }
@@ -506,11 +941,31 @@ h1 {
 /* Система уровней */
 .level-display {
     margin-top: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
+    background: var(--current-primary);
+    backdrop-filter: blur(15px);
     border-radius: 15px;
     padding: 10px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 
+        0 5px 20px var(--current-particle),
+        inset 0 2px 5px rgba(255, 255, 255, 0.2),
+        0 0 30px var(--current-particle);
+    position: relative;
+    overflow: hidden;
+    animation: levelGlow 3s ease-in-out infinite;
+}
+
+.level-display::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    animation: levelShimmer 4s linear infinite;
+    z-index: 1;
 }
 
 .level-info {
@@ -518,13 +973,15 @@ h1 {
     flex-direction: column;
     gap: 5px;
     align-items: center;
+    position: relative;
+    z-index: 2;
 }
 
 .level-number {
     font-weight: bold;
     font-size: 1rem;
-    color: #f1c40f;
-    text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
 .level-progress {
@@ -538,9 +995,13 @@ h1 {
 
 .progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #f1c40f, #f39c12);
-    transition: width 0.5s ease-out;
-    box-shadow: 0 0 10px rgba(241, 196, 15, 0.6);
+    background: linear-gradient(90deg, #f1c40f, #f39c12, #e74c3c);
+    transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 
+        0 0 15px rgba(241, 196, 15, 0.8),
+        inset 0 2px 5px rgba(255, 255, 255, 0.3);
+    position: relative;
+    overflow: hidden;
 }
 
 .next-level {
@@ -561,7 +1022,7 @@ h1 {
     justify-content: center;
     align-items: center;
     z-index: 2000;
-    animation: levelUpAppear 4s ease-out forwards;
+    animation: levelUpAppear 5s ease-out forwards;
 }
 
 .level-up-content {
@@ -594,9 +1055,26 @@ h1 {
 }
 
 @keyframes levelUpBounce {
-    0% { transform: scale(0) rotate(-180deg); }
-    50% { transform: scale(1.1) rotate(0deg); }
-    100% { transform: scale(1) rotate(0deg); }
+    0% { 
+        transform: scale(0) rotate(-180deg) translateY(-100px); 
+        filter: blur(10px) brightness(2);
+    }
+    30% { 
+        transform: scale(0.8) rotate(-60deg) translateY(-20px); 
+        filter: blur(3px) brightness(1.5);
+    }
+    60% { 
+        transform: scale(1.2) rotate(10deg) translateY(10px); 
+        filter: blur(1px) brightness(1.2);
+    }
+    80% { 
+        transform: scale(0.95) rotate(-5deg) translateY(-5px); 
+        filter: blur(0) brightness(1.1);
+    }
+    100% { 
+        transform: scale(1) rotate(0deg) translateY(0); 
+        filter: blur(0) brightness(1);
+    }
 }
 
 /* Новые контейнеры */
@@ -609,6 +1087,15 @@ h1 {
     background: linear-gradient(145deg, #5dade2, #3498db);
 }
 
+.container-btn.cyan:hover {
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.3),
+        0 10px 25px rgba(0, 0, 0, 0.2),
+        inset 0 3px 12px rgba(255, 255, 255, 0.6),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.15),
+        0 0 40px rgba(52, 152, 219, 0.6);
+}
+
 .container-btn.red {
     background: linear-gradient(145deg, #e74c3c, #c0392b);
 }
@@ -616,6 +1103,15 @@ h1 {
 .container-btn.red::before,
 .container-btn.red::after {
     background: linear-gradient(145deg, #ec7063, #e74c3c);
+}
+
+.container-btn.red:hover {
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.3),
+        0 10px 25px rgba(0, 0, 0, 0.2),
+        inset 0 3px 12px rgba(255, 255, 255, 0.6),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.15),
+        0 0 40px rgba(231, 76, 60, 0.7);
 }
 
 .container-btn.purple {
@@ -627,6 +1123,15 @@ h1 {
     background: linear-gradient(145deg, #bb8fce, #9b59b6);
 }
 
+.container-btn.purple:hover {
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.3),
+        0 10px 25px rgba(0, 0, 0, 0.2),
+        inset 0 3px 12px rgba(255, 255, 255, 0.6),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.15),
+        0 0 40px rgba(155, 89, 182, 0.7);
+}
+
 .container-btn.gray {
     background: linear-gradient(145deg, #7f8c8d, #34495e);
 }
@@ -636,18 +1141,92 @@ h1 {
     background: linear-gradient(145deg, #95a5a6, #7f8c8d);
 }
 
-@keyframes containerAppear {
+.container-btn.gray:hover {
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.3),
+        0 10px 25px rgba(0, 0, 0, 0.2),
+        inset 0 3px 12px rgba(255, 255, 255, 0.6),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.15),
+        0 0 40px rgba(127, 140, 141, 0.6);
+}
+
+/* Эффект материализации контейнера */
+@keyframes containerMaterialize {
     0% {
         opacity: 0;
-        transform: scale(0) rotate(-180deg);
+        transform: scale(0) rotateY(-180deg);
+        filter: blur(10px) brightness(3);
+        box-shadow: 0 0 0 rgba(255, 255, 255, 0);
     }
-    50% {
-        opacity: 1;
-        transform: scale(1.1) rotate(0deg);
+    20% {
+        opacity: 0.3;
+        transform: scale(0.3) rotateY(-120deg);
+        filter: blur(8px) brightness(2.5);
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+    }
+    40% {
+        opacity: 0.6;
+        transform: scale(0.7) rotateY(-60deg);
+        filter: blur(5px) brightness(2);
+        box-shadow: 0 0 50px rgba(255, 255, 255, 0.9);
+    }
+    60% {
+        opacity: 0.8;
+        transform: scale(0.9) rotateY(-20deg);
+        filter: blur(3px) brightness(1.5);
+        box-shadow: 0 0 40px rgba(255, 255, 255, 0.7);
+    }
+    80% {
+        opacity: 0.9;
+        transform: scale(1.1) rotateY(10deg);
+        filter: blur(1px) brightness(1.2);
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
     }
     100% {
         opacity: 1;
-        transform: scale(1) rotate(0deg);
+        transform: scale(1) rotateY(0deg);
+        filter: blur(0px) brightness(1);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* Эффект энергетических частиц при материализации */
+@keyframes energyParticles {
+    0% {
+        opacity: 0;
+        transform: translateY(50px) scale(0);
+    }
+    20% {
+        opacity: 1;
+        transform: translateY(30px) scale(0.5);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translateY(10px) scale(1);
+    }
+    80% {
+        opacity: 0.4;
+        transform: translateY(-10px) scale(0.8);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.3);
+    }
+}
+
+/* Волна материализации */
+@keyframes materializeWave {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(2);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(4);
+        opacity: 0;
     }
 }
 
@@ -807,20 +1386,20 @@ h1 {
 
 .tutorial-content {
     background: linear-gradient(135deg, #3498db, #2980b9);
-    padding: 30px;
-    border-radius: 20px;
+    padding: 20px;
+    border-radius: 15px;
     text-align: center;
     color: white;
     border: 3px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 0 40px rgba(52, 152, 219, 0.6);
     animation: tutorialBounce 0.8s ease-out;
-    max-width: 400px;
+    max-width: 320px;
     margin: 20px;
 }
 
 .tutorial-icon {
-    font-size: 3rem;
-    margin-bottom: 15px;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
     animation: tutorialIconPulse 1.5s ease-in-out infinite;
 }
 
@@ -831,8 +1410,8 @@ h1 {
 }
 
 .tutorial-content p {
-    margin: 10px 0;
-    font-size: 1rem;
+    margin: 6px 0;
+    font-size: 0.95rem;
     opacity: 0.9;
     line-height: 1.4;
 }
@@ -907,96 +1486,112 @@ h1 {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 3000;
-    animation: fadeIn 0.3s ease-out;
+    animation: modalFadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-@keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
+@keyframes modalFadeIn {
+    0% { 
+        opacity: 0; 
+        backdrop-filter: blur(0);
+    }
+    100% { 
+        opacity: 1; 
+        backdrop-filter: blur(8px);
+    }
 }
 
 /* Диалог ввода имени */
 .name-input-dialog {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     color: white;
-    max-width: 500px;
+    max-width: 440px;
     width: 90%;
     animation: slideIn 0.4s ease-out;
 }
 
 @keyframes slideIn {
     0% {
-        transform: translateY(-50px);
+        transform: translateY(-50px) scale(0.9) rotateX(-15deg);
         opacity: 0;
+        filter: blur(5px);
+    }
+    70% {
+        transform: translateY(5px) scale(1.02) rotateX(2deg);
+        opacity: 0.9;
+        filter: blur(1px);
     }
     100% {
-        transform: translateY(0);
+        transform: translateY(0) scale(1) rotateX(0);
         opacity: 1;
+        filter: blur(0);
     }
 }
 
 .dialog-content h2 {
     text-align: center;
-    margin: 0 0 20px 0;
-    font-size: 1.8rem;
+    margin: 0 0 12px 0;
+    font-size: 1.4rem;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .score-summary {
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    padding: 20px;
-    margin: 20px 0;
+    border-radius: 12px;
+    padding: 12px;
+    margin: 12px 0;
     backdrop-filter: blur(10px);
 }
 
 .score-summary p {
-    margin: 8px 0;
-    font-size: 1.1rem;
+    margin: 4px 0;
+    font-size: 0.9rem;
 }
 
 .name-input-section {
-    margin-top: 20px;
+    margin-top: 12px;
 }
 
 .name-input-section label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
 }
 
 .name-input-section input {
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 12px;
     border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    margin-bottom: 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
     box-sizing: border-box;
 }
 
 .dialog-buttons {
     display: flex;
-    gap: 15px;
+    gap: 10px;
     justify-content: center;
 }
 
 .btn-primary, .btn-secondary, .btn-danger {
-    padding: 12px 24px;
+    padding: 8px 16px;
     border: none;
-    border-radius: 25px;
-    font-size: 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
 }
 
 .btn-primary {
@@ -1107,6 +1702,10 @@ h1 {
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+.table-header span:last-child {
+    text-align: center;
 }
 
 .table-row {
@@ -1323,9 +1922,76 @@ h1 {
     }
 
     .name-input-dialog, .leaderboard-dialog {
-        margin: 10px;
-        width: calc(100% - 20px);
+        margin: 5px;
+        width: calc(100% - 10px);
         max-width: none;
+        padding: 12px;
+    }
+    
+    .dialog-content h2 {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+    }
+    
+    .score-summary {
+        padding: 8px;
+        margin: 8px 0;
+    }
+    
+    .score-summary p {
+        font-size: 0.8rem;
+        margin: 2px 0;
+    }
+    
+    .recycling-stats {
+        padding: 10px;
+        margin-top: 8px;
+    }
+    
+    .recycling-stats h3 {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+    
+    .recycling-stats p {
+        font-size: 0.75rem;
+        margin-bottom: 2px;
+    }
+    
+    .eco-impact {
+        padding: 8px;
+        margin-top: 6px;
+    }
+    
+    .eco-impact h4 {
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+    }
+    
+    .eco-impact p {
+        font-size: 0.7rem;
+        margin-bottom: 1px;
+    }
+    
+    .name-input-section {
+        margin-top: 8px;
+    }
+    
+    .name-input-section label {
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+    }
+    
+    .name-input-section input {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+    }
+    
+    .decomposition-info {
+        padding: 10px 15px;
+        font-size: 0.75rem;
+        border-radius: 12px;
     }
 
     .leaderboard-header {
@@ -1398,45 +2064,45 @@ h1 {
 .recycling-stats {
     background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
-    padding: 20px;
-    border-radius: 15px;
-    margin-top: 20px;
-    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 15px;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
 }
 
 .recycling-stats h3 {
-    margin-bottom: 12px;
-    font-size: 1.2rem;
+    margin-bottom: 8px;
+    font-size: 1rem;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .recycling-stats p {
-    margin-bottom: 6px;
-    font-size: 0.95rem;
-    line-height: 1.4;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    line-height: 1.2;
 }
 
 .eco-impact {
     background: rgba(255, 255, 255, 0.15);
-    padding: 15px;
-    border-radius: 10px;
-    margin-top: 15px;
-    border-left: 4px solid #2ecc71;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    border-left: 3px solid #2ecc71;
 }
 
 .eco-impact h4 {
-    margin-bottom: 10px;
-    font-size: 1.1rem;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .eco-impact p {
-    margin-bottom: 4px;
-    font-size: 0.9rem;
+    margin-bottom: 2px;
+    font-size: 0.8rem;
     opacity: 0.95;
 }
 
@@ -1446,4 +2112,538 @@ h1 {
     max-width: 350px;
     text-align: center;
     line-height: 1.3;
+}
+
+/* Стили для информации о времени разложения */
+.decomposition-info {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 15px 20px;
+    border-radius: 15px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    animation: decompInfoAppear 0.3s ease-out;
+    pointer-events: none;
+    backdrop-filter: blur(5px);
+}
+
+.decomposition-info.fast-decomp {
+    background: linear-gradient(135deg, rgba(39, 174, 96, 0.9), rgba(46, 204, 113, 0.9));
+    border: 2px solid rgba(39, 174, 96, 0.8);
+}
+
+.decomposition-info.slow-decomp {
+    background: linear-gradient(135deg, rgba(241, 196, 15, 0.9), rgba(243, 156, 18, 0.9));
+    border: 2px solid rgba(241, 196, 15, 0.8);
+}
+
+.decomposition-info.very-slow-decomp {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.9), rgba(192, 57, 43, 0.9));
+    border: 2px solid rgba(231, 76, 60, 0.8);
+}
+
+.decomp-content {
+    line-height: 1.4;
+}
+
+@keyframes decompInfoAppear {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Стили для факта дня */
+.daily-fact-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.daily-fact-dialog {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 0;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    color: white;
+    max-width: 500px;
+    width: 90%;
+    overflow: hidden;
+    animation: slideIn 0.6s ease-out;
+}
+
+.daily-fact-header {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.daily-fact-icon {
+    font-size: 2rem;
+    animation: iconPulse 2s infinite;
+}
+
+.daily-fact-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.daily-fact-date {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 10px;
+}
+
+.daily-fact-content {
+    padding: 25px;
+    text-align: center;
+}
+
+.daily-fact-content h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.3rem;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.daily-fact-content p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    opacity: 0.95;
+}
+
+.daily-fact-footer {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Мобильные стили для факта дня */
+@media (max-width: 480px) {
+    .daily-fact-dialog {
+        margin: 20px;
+        width: calc(100% - 40px);
+        border-radius: 15px;
+    }
+    
+    .daily-fact-header {
+        padding: 15px;
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .daily-fact-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .daily-fact-icon {
+        font-size: 1.5rem;
+    }
+    
+    .daily-fact-content {
+        padding: 20px 15px;
+    }
+    
+    .daily-fact-content h3 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+    
+    .daily-fact-content p {
+        font-size: 0.9rem;
+    }
+    
+    .daily-fact-footer {
+        padding: 15px;
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Достижения */
+.achievement-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    border: 3px solid #28a745;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(40, 167, 69, 0.4);
+    transform: translateX(100%);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    max-width: 350px;
+    animation: achievementGlow 2s infinite alternate;
+}
+
+.achievement-notification.show {
+    transform: translateX(0);
+}
+
+.achievement-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.achievement-icon {
+    font-size: 3rem;
+    animation: achievementIconSpin 2s linear infinite;
+}
+
+.achievement-text h3 {
+    color: #28a745;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.achievement-text h4 {
+    color: #2c3e50;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.achievement-text p {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+@keyframes achievementGlow {
+    0% {
+        box-shadow: 
+            0 10px 30px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(40, 167, 69, 0.4);
+    }
+    100% {
+        box-shadow: 
+            0 10px 30px rgba(0, 0, 0, 0.3),
+            0 0 30px rgba(40, 167, 69, 0.7);
+    }
+}
+
+@keyframes achievementIconSpin {
+    0% { transform: rotateY(0deg); }
+    50% { transform: rotateY(180deg); }
+    100% { transform: rotateY(360deg); }
+}
+
+/* Адаптивность для достижений */
+@media (max-width: 480px) {
+    .achievement-notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        padding: 15px;
+    }
+    
+    .achievement-content {
+        gap: 10px;
+    }
+    
+    .achievement-icon {
+        font-size: 2.5rem;
+    }
+    
+    .achievement-text h3 {
+        font-size: 1rem;
+    }
+    
+    .achievement-text h4 {
+        font-size: 1.1rem;
+    }
+    
+    .achievement-text p {
+        font-size: 0.9rem;
+    }
 } 
+
+/* Атмосферные эффекты */
+#atmospheric-effects {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+/* Падающие листья */
+#falling-leaves {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.falling-leaf {
+    position: absolute;
+    font-size: 1.5rem;
+    animation: leafFall linear infinite;
+    opacity: 0.7;
+    filter: drop-shadow(0 0 3px rgba(76, 175, 80, 0.3));
+}
+
+@keyframes leafFall {
+    0% {
+        transform: translateY(-10px) rotateZ(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.7;
+    }
+    90% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(100vh) rotateZ(360deg);
+        opacity: 0;
+    }
+}
+
+/* Частицы пыли */
+#dust-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.dust-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: dustFloat linear infinite;
+    filter: blur(0.5px);
+}
+
+@keyframes dustFloat {
+    0% {
+        transform: translateY(100vh) translateX(0px);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateY(50vh) translateX(20px);
+        opacity: 0.8;
+    }
+    90% {
+        opacity: 0.4;
+    }
+    100% {
+        transform: translateY(-10px) translateX(-10px);
+        opacity: 0;
+    }
+}
+
+/* Дождь из переработанных материалов */
+#recycling-rain {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.recycling-drop {
+    position: absolute;
+    font-size: 1.2rem;
+    animation: recyclingFall linear infinite;
+    opacity: 0.6;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+}
+
+@keyframes recyclingFall {
+    0% {
+        transform: translateY(-20px) rotateZ(0deg);
+        opacity: 0;
+    }
+    5% {
+        opacity: 0.6;
+    }
+    95% {
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(100vh) rotateZ(180deg);
+        opacity: 0;
+    }
+}
+
+/* Вариации для листьев */
+.falling-leaf.slow {
+    animation-duration: 8s;
+}
+
+.falling-leaf.medium {
+    animation-duration: 6s;
+}
+
+.falling-leaf.fast {
+    animation-duration: 4s;
+}
+
+/* Вариации для пыли */
+.dust-particle.slow {
+    animation-duration: 12s;
+}
+
+.dust-particle.medium {
+    animation-duration: 8s;
+}
+
+.dust-particle.fast {
+    animation-duration: 5s;
+}
+
+/* Вариации для переработанных материалов */
+.recycling-drop.slow {
+    animation-duration: 7s;
+}
+
+.recycling-drop.medium {
+    animation-duration: 5s;
+}
+
+.recycling-drop.fast {
+    animation-duration: 3s;
+}
+
+/* Адаптивность для атмосферных эффектов */
+@media (max-width: 768px) {
+    .falling-leaf, .recycling-drop {
+        font-size: 1rem;
+    }
+    
+    .dust-particle {
+        width: 1.5px;
+        height: 1.5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .falling-leaf, .recycling-drop {
+        font-size: 0.8rem;
+    }
+    
+    .dust-particle {
+        width: 1px;
+        height: 1px;
+    }
+} 
+
+/* Классы для эффектов материализации */
+.container-btn.materializing {
+    animation: containerMaterialize 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    transform-origin: center;
+    perspective: 1000px;
+}
+
+.energy-particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: radial-gradient(circle, #fff 0%, rgba(255,255,255,0.8) 50%, transparent 100%);
+    border-radius: 50%;
+    animation: energyParticles 1.5s ease-out forwards;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.energy-particle.blue {
+    background: radial-gradient(circle, #3498db 0%, rgba(52,152,219,0.8) 50%, transparent 100%);
+    box-shadow: 0 0 6px #3498db;
+}
+
+.energy-particle.yellow {
+    background: radial-gradient(circle, #f1c40f 0%, rgba(241,196,15,0.8) 50%, transparent 100%);
+    box-shadow: 0 0 6px #f1c40f;
+}
+
+.energy-particle.green {
+    background: radial-gradient(circle, #27ae60 0%, rgba(39,174,96,0.8) 50%, transparent 100%);
+    box-shadow: 0 0 6px #27ae60;
+}
+
+.energy-particle.cyan {
+    background: radial-gradient(circle, #17a2b8 0%, rgba(23,162,184,0.8) 50%, transparent 100%);
+    box-shadow: 0 0 6px #17a2b8;
+}
+
+.energy-particle.red {
+    background: radial-gradient(circle, #e74c3c 0%, rgba(231,76,60,0.8) 50%, transparent 100%);
+    box-shadow: 0 0 6px #e74c3c;
+}
+
+.energy-particle.purple {
+    background: radial-gradient(circle, #9b59b6 0%, rgba(155,89,182,0.8) 50%, transparent 100%);
+    box-shadow: 0 0 6px #9b59b6;
+}
+
+.energy-particle.gray {
+    background: radial-gradient(circle, #95a5a6 0%, rgba(149,165,166,0.8) 50%, transparent 100%);
+    box-shadow: 0 0 6px #95a5a6;
+}
+
+.materialize-wave {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: materializeWave 1.5s ease-out forwards;
+    pointer-events: none;
+    z-index: 99;
+}
