@@ -1115,18 +1115,18 @@ h1 {
 }
 
 .container-btn.purple {
-    background: linear-gradient(145deg, #9b59b6, #8e44ad);
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 50%, #6c3483 100%);
 }
 
 .container-btn.purple::before,
 .container-btn.purple::after {
-    background: linear-gradient(145deg, #bb8fce, #9b59b6);
+    background: linear-gradient(135deg, #d2b4de, #9b59b6);
 }
 
 .container-btn.purple:hover {
     box-shadow: 
-        0 20px 50px rgba(0, 0, 0, 0.3),
-        0 10px 25px rgba(0, 0, 0, 0.2),
+        0 20px 50px rgba(155, 89, 182, 0.3),
+        0 10px 25px rgba(155, 89, 182, 0.15),
         inset 0 3px 12px rgba(255, 255, 255, 0.6),
         inset 0 -3px 8px rgba(0, 0, 0, 0.15),
         0 0 40px rgba(155, 89, 182, 0.7);

@@ -27,8 +27,8 @@ class SortingGame {
         
         // Система уровней
         this.currentLevel = 1;
-        this.maxLevel = 4;
-        this.levelThresholds = [0, 100, 250, 450, 750]; // Очки для перехода на след. уровень (макс. уровень 4)
+        this.maxLevel = 5;
+        this.levelThresholds = [0, 100, 250, 450, 750, 1100]; // Очки для перехода на след. уровень (макс. уровень 5)
         this.unlockedTypes = ['plastic', 'paper']; // Начинаем только с 2 контейнеров
         
 
@@ -46,7 +46,8 @@ class SortingGame {
             paper: 0,
             organic: 0,
             glass: 0,
-            battery: 0
+            battery: 0,
+            electronics: 0 // новый тип
         };
         this.maxFillLevel = 100; // Максимальный уровень заполнения
         this.fillIncrement = 5;  // На сколько заполняется при каждом правильном ответе
@@ -261,12 +262,22 @@ class SortingGame {
             { emoji: '🔌', type: 'battery', name: 'Зарядное устройство' },
             { emoji: '💊', type: 'battery', name: 'Просроченные лекарства' },
             { emoji: '⚗️', type: 'battery', name: 'Химикаты' },
-            { emoji: '🧴', type: 'battery', name: 'Опасная жидкость' }
+            { emoji: '🧴', type: 'battery', name: 'Опасная жидкость' },
             
+            // Уровень 5 - Электроника
+            { emoji: '📱', type: 'electronics', name: 'Мобильный телефон' },
+            { emoji: '💻', type: 'electronics', name: 'Ноутбук' },
+            { emoji: '⌚', type: 'electronics', name: 'Умные часы' },
+            { emoji: '🎮', type: 'electronics', name: 'Геймпад' },
+            { emoji: '📺', type: 'electronics', name: 'Телевизор' },
+            { emoji: '🔌', type: 'electronics', name: 'Кабель' }
 
         ];
         
         // Бонусные объекты убраны
+        
+        this.recentAnswers = [];
+        this.hintActive = false;
         
         this.init();
     }
@@ -838,9 +849,14 @@ class SortingGame {
 
     spawnTrash() {
         // Выбираем случайный тип мусора из доступных для текущего уровня
-        const availableTrash = this.trashTypes.filter(item => 
+        let availableTrash = this.trashTypes.filter(item => 
             this.unlockedTypes.includes(item.type)
         );
+        
+        // На 5-м уровне исключаем бумажные объекты
+        if (this.currentLevel >= 5) {
+            availableTrash = availableTrash.filter(item => item.type !== 'paper');
+        }
         const randomIndex = Math.floor(Math.random() * availableTrash.length);
         const trashData = availableTrash[randomIndex];
         
@@ -979,6 +995,15 @@ class SortingGame {
                     linear-gradient(135deg, rgba(178, 34, 34, 0.7) 0%, rgba(139, 0, 0, 0.8) 50%, rgba(102, 25, 25, 0.9) 100%)
                 `;
                 element.style.border = '2px solid rgba(139, 0, 0, 0.8)';
+                break;
+            case 'electronics':
+                element.style.background = `
+                    radial-gradient(circle at 25% 30%, rgba(139, 69, 19, 0.4) 8%, transparent 18%),
+                    radial-gradient(circle at 80% 20%, rgba(101, 67, 33, 0.5) 12%, transparent 22%),
+                    radial-gradient(circle at 40% 85%, rgba(160, 82, 45, 0.3) 10%, transparent 20%),
+                    linear-gradient(225deg, rgba(138, 43, 226, 0.7) 0%, rgba(75, 0, 130, 0.8) 50%, rgba(106, 90, 205, 0.6) 100%)
+                `;
+                element.style.border = '2px solid rgba(75, 0, 130, 0.8)';
                 break;
             case 'metal':
                 element.style.background = `
@@ -1189,6 +1214,19 @@ class SortingGame {
         this.updateLevelDisplay();
         
         console.log('Контейнер:', containerType, 'Мусор:', trashItem.data.type, 'Правильно:', isCorrect, 'Комбо:', this.comboCount, 'Счет:', this.score, 'Уровень:', this.currentLevel, 'Объектов на экране:', this.activeTrashItems.length);
+        
+        this.recentAnswers.push(isCorrect);
+        if (this.recentAnswers.length > 10) this.recentAnswers.shift();
+        const recentErrors = this.recentAnswers.filter(x => x === false).length;
+        if (recentErrors >= 4 && !this.hintActive) {
+            this.currentSpawnInterval = Math.floor(this.baseSpawnInterval * 1.4);
+            this.hintActive = true;
+            this.showHint();
+        } else if (recentErrors < 4 && this.hintActive) {
+            this.currentSpawnInterval = this.baseSpawnInterval;
+            this.hintActive = false;
+            this.hideHint();
+        }
     }
 
     // Анимации для конкретных объектов
@@ -1449,6 +1487,12 @@ class SortingGame {
             this.updateLevelDisplay();
             console.log(`Переход на уровень ${this.currentLevel}!`);
         }
+        if (this.currentLevel >= 4) {
+            this.baseSpawnInterval = 5000;
+        } else {
+            this.baseSpawnInterval = 4000;
+        }
+        this.updateGameSpeed();
     }
 
     // Разблокировка новых типов мусора
@@ -1456,7 +1500,8 @@ class SortingGame {
         const levelTrashTypes = {
             2: ['organic'],   // Уровень 2: добавляем органику (3-й контейнер)
             3: ['glass'],     // Уровень 3: добавляем стекло (4-й контейнер)  
-            4: ['battery']    // Уровень 4: добавляем опасные отходы (5-й контейнер)
+            4: ['battery'],    // Уровень 4: добавляем опасные отходы (5-й контейнер)
+            5: ['electronics'] // Уровень 5: добавляем электронику (6-й контейнер, но paper не спавнится)
         };
         
         const newTypes = levelTrashTypes[this.currentLevel];
@@ -1505,6 +1550,7 @@ class SortingGame {
             organic: 'green',
             glass: 'cyan',
             battery: 'red',
+            electronics: 'purple', // новый цвет
             metal: 'gray'
         };
         return classes[type] || 'gray';
@@ -1514,7 +1560,8 @@ class SortingGame {
         const icons = {
             organic: '🍕',
             glass: '🥃',
-            battery: '⚠️'
+            battery: '⚠️',
+            electronics: '📱' // иконка электроники
         };
         return icons[type] || '❓';
     }
@@ -1523,7 +1570,8 @@ class SortingGame {
         const labels = {
             organic: 'Органика',
             glass: 'Стекло',
-            battery: 'Опасные отходы'
+            battery: 'Опасные отходы',
+            electronics: 'Электроника' // подпись
         };
         return labels[type] || 'Неизвестно';
     }
@@ -2136,7 +2184,7 @@ class SortingGame {
         this.maxCombo = 0;
         this.comboMultiplier = 1;
         this.currentLevel = 1;
-        this.unlockedTypes = ['plastic', 'paper', 'organic'];
+        this.unlockedTypes = ['plastic', 'paper'];
         this.currentSpawnInterval = this.baseSpawnInterval;
         this.gameStartTime = Date.now();
         this.perfectStreakStart = Date.now();
@@ -2193,6 +2241,8 @@ class SortingGame {
         this.initAtmosphericEffects();
         
         console.log('Игра перезапущена');
+        this.baseSpawnInterval = 4000;
+        this.updateGameSpeed();
      }
 
      // Показать лидерборд (кнопка в интерфейсе)
@@ -2208,7 +2258,8 @@ class SortingGame {
              paper: '📄 Бумага', 
              organic: '🌱 Органика',
              glass: '🍾 Стекло',
-             battery: '⚠️ Опасные отходы'
+             battery: '⚠️ Опасные отходы',
+             electronics: '📱 Электроника'
          };
          
          for (const [type, count] of Object.entries(this.recyclingStats.itemsByType)) {
@@ -2247,6 +2298,11 @@ class SortingGame {
                  text: 'Предотвращено загрязнения', 
                  perItem: 20, // кв.м почвы/воды
                  unit: 'кв.м почвы/воды'
+             },
+             electronics: { 
+                 text: 'Извлечено ценных металлов', 
+                 perItem: 0.05, // кг драгметаллов из электроники
+                 unit: 'кг'
              }
          };
          
@@ -2686,6 +2742,20 @@ class SortingGame {
                 style.parentNode.removeChild(style);
             }
         }, 1500);
+    }
+
+    showHint() {
+        if (document.getElementById('hint-popup')) return;
+        const hint = document.createElement('div');
+        hint.id = 'hint-popup';
+        hint.className = 'tutorial-popup';
+        hint.innerHTML = `<div class="tutorial-content"><div class="tutorial-icon">💡</div><p>Подсказка: внимательно смотри на иконки и цвета контейнеров!<br>Ошибок слишком много — темп замедлен.</p></div>`;
+        document.body.appendChild(hint);
+    }
+
+    hideHint() {
+        const hint = document.getElementById('hint-popup');
+        if (hint) hint.parentNode.removeChild(hint);
     }
 }
 
