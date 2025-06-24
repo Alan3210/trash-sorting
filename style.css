@@ -236,6 +236,8 @@ h1 {
     -ms-user-select: none;
     position: relative;
     filter: contrast(1.1) saturate(0.8);
+    touch-action: none;
+    -webkit-touch-callout: none;
 }
 
 .trash-item:hover {
@@ -432,6 +434,10 @@ h1 {
     backdrop-filter: blur(5px);
     transform-style: preserve-3d;
     animation: containerBreathing 4s ease-in-out infinite;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 /* Левая створка крышки */

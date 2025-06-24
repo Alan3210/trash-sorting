@@ -1542,6 +1542,9 @@ class SortingGame {
             // Эффект материализации контейнера
             this.materializeContainer(container, type);
         });
+        
+        // Обновляем массив контейнеров для touch событий
+        this.containers = Array.from(document.querySelectorAll('.container-btn'));
     }
 
     // Вспомогательные методы для контейнеров
