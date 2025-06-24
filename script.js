@@ -1053,7 +1053,10 @@ class SortingGame {
             const rect = element.getBoundingClientRect();
             this.originalTrashPosition = { x: rect.left, y: rect.top };
             
+            // Переключаем на fixed и устанавливаем текущие координаты
             element.style.position = 'fixed';
+            element.style.left = rect.left + 'px';
+            element.style.top = rect.top + 'px';
             element.style.zIndex = '1000';
             element.style.opacity = '0.8';
             element.style.transform = 'scale(1.1)';
@@ -1067,8 +1070,13 @@ class SortingGame {
                 e.preventDefault();
                 const touch = e.touches[0];
                 
-                element.style.left = (touch.clientX - 40) + 'px';
-                element.style.top = (touch.clientY - 40) + 'px';
+                // Рассчитываем смещение от начальной точки касания
+                const deltaX = touch.clientX - this.touchStartPos.x;
+                const deltaY = touch.clientY - this.touchStartPos.y;
+                
+                // Применяем смещение к исходной позиции
+                element.style.left = (this.originalTrashPosition.x + deltaX) + 'px';
+                element.style.top = (this.originalTrashPosition.y + deltaY) + 'px';
                 
                 this.highlightContainerUnderTouch(touch.clientX, touch.clientY);
             }
@@ -1099,12 +1107,15 @@ class SortingGame {
 
     // Сброс позиции конкретного объекта мусора
     resetTrashItemPosition(element) {
+        // Сбрасываем все стили перетаскивания
         element.style.position = 'absolute';
+        element.style.left = '';
+        element.style.top = '';
         element.style.zIndex = '';
         element.style.opacity = '1';
         element.style.transform = '';
         
-        // Возвращаем в случайную позицию
+        // Возвращаем в случайную позицию в пределах spawn area
         const position = this.getRandomPosition();
         element.style.left = position.x + 'px';
         element.style.top = position.y + 'px';
