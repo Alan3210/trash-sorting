@@ -1482,6 +1482,16 @@ h1 {
     transform: translateY(0);
 }
 
+#sound-toggle-btn {
+    background: linear-gradient(135deg, #27ae60, #229954);
+    box-shadow: 0 3px 10px rgba(39, 174, 96, 0.3);
+}
+
+#sound-toggle-btn:hover {
+    background: linear-gradient(135deg, #229954, #1e8449);
+    box-shadow: 0 5px 15px rgba(39, 174, 96, 0.5);
+}
+
 
 
 /* Система лидерборда */

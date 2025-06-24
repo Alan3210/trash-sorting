@@ -294,6 +294,11 @@ class SortingGame {
     playSuccessSound() {
         if (!this.audioContext) return;
         
+        // Пытаемся возобновить контекст если он приостановлен
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+        
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
         
@@ -316,6 +321,11 @@ class SortingGame {
     playErrorSound() {
         if (!this.audioContext) return;
         
+        // Пытаемся возобновить контекст если он приостановлен
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+        
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
         
@@ -337,6 +347,11 @@ class SortingGame {
     playSpawnSound() {
         if (!this.audioContext) return;
         
+        // Пытаемся возобновить контекст если он приостановлен
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+        
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
         
@@ -356,6 +371,11 @@ class SortingGame {
     // Звук тревоги при переполнении
     playOverflowWarningSound() {
         if (!this.audioContext) return;
+        
+        // Пытаемся возобновить контекст если он приостановлен
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
         
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
@@ -618,6 +638,7 @@ class SortingGame {
         console.log('Игра инициализирована');
         this.setupEventListeners();
         this.updateLevelDisplay();
+        this.updateSoundButton(); // Обновляем статус кнопки звука
         this.initializeContainerFills();
         
         // Инициализируем цветовую схему для 1-го уровня
@@ -635,15 +656,32 @@ class SortingGame {
         this.setupDesktopDragAndDrop();
 
         // Включение звука при первом взаимодействии пользователя
-        document.addEventListener('click', () => {
+        const enableAudio = () => {
             if (this.audioContext && this.audioContext.state === 'suspended') {
                 this.audioContext.resume();
+                console.log('Audio context resumed');
             }
-        }, { once: true });
+        };
+        
+        // Для десктопа
+        document.addEventListener('click', enableAudio, { once: true });
+        
+        // Для мобильных устройств
+        document.addEventListener('touchstart', enableAudio, { once: true });
+        
+        // Дополнительно на кнопках
+        document.addEventListener('touchend', enableAudio, { once: true });
         
         // Кнопки управления игрой
+        const soundToggleBtn = document.getElementById('sound-toggle-btn');
         const leaderboardBtn = document.getElementById('leaderboard-btn');
         const gameOverBtn = document.getElementById('game-over-btn');
+
+        if (soundToggleBtn) {
+            soundToggleBtn.addEventListener('click', () => {
+                this.toggleSound();
+            });
+        }
 
         if (leaderboardBtn) {
             leaderboardBtn.addEventListener('click', () => {
@@ -1046,6 +1084,12 @@ class SortingGame {
             e.preventDefault();
             this.isDragging = true;
             this.currentDraggedElement = element;
+            
+            // Дополнительная активация звука для мобильных устройств
+            if (this.audioContext && this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+                console.log('Audio context resumed on touch');
+            }
             
             const touch = e.touches[0];
             this.touchStartPos = { x: touch.clientX, y: touch.clientY };
@@ -1884,6 +1928,11 @@ class SortingGame {
      // Звук опустошения контейнера
      playEmptyContainerSound() {
          if (!this.audioContext) return;
+         
+         // Пытаемся возобновить контекст если он приостановлен
+         if (this.audioContext.state === 'suspended') {
+             this.audioContext.resume();
+         }
          
          // Звук опустошения - восходящая мелодия
          const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
@@ -2770,6 +2819,50 @@ class SortingGame {
     hideHint() {
         const hint = document.getElementById('hint-popup');
         if (hint) hint.parentNode.removeChild(hint);
+    }
+
+    // Переключение звука
+    toggleSound() {
+        const soundBtn = document.getElementById('sound-toggle-btn');
+        
+        if (!this.audioContext) {
+            // Создаем аудио контекст если его нет
+            this.initAudio().then(() => {
+                this.updateSoundButton();
+            });
+            return;
+        }
+        
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume().then(() => {
+                this.updateSoundButton();
+                this.playSuccessSound(); // Тестовый звук
+            });
+        } else {
+            this.audioContext.suspend().then(() => {
+                this.updateSoundButton();
+            });
+        }
+    }
+
+    // Обновление состояния кнопки звука
+    updateSoundButton() {
+        const soundBtn = document.getElementById('sound-toggle-btn');
+        if (!soundBtn) return;
+        
+        if (!this.audioContext) {
+            soundBtn.innerHTML = '🔇 Звук';
+            soundBtn.title = 'Звук недоступен';
+            return;
+        }
+        
+        if (this.audioContext.state === 'running') {
+            soundBtn.innerHTML = '🔊 Звук';
+            soundBtn.title = 'Звук включен';
+        } else {
+            soundBtn.innerHTML = '🔇 Звук';
+            soundBtn.title = 'Звук выключен (нажмите для включения)';
+        }
     }
 }
 
